@@ -48,6 +48,7 @@ export default function Home() {
       <section className="grid grid-cols-2 gap-3">
         <Tile to="/annual" icon="📅" label="年間予定" />
         <Tile to="/events" icon="🎪" label="イベント" />
+        <Tile to="/news" icon="📢" label="お知らせ" />
         <Tile to="/photos" icon="📷" label="写真" />
         <Tile to="/past" icon="🗂" label="過去イベント" />
         <Tile to="/roles" icon="👑" label="歴代役職" />

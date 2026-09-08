@@ -15,7 +15,7 @@ import About from './pages/About'
 import Feedback from './pages/Feedback'
 import RolesHistory from './pages/RolesHistory'
 import PastEvents from './pages/PastEvents'
-import Placeholder from './pages/Placeholder'
+import News from './pages/News'
 import MyPage from './pages/mypage/MyPage'
 import MyProfile from './pages/mypage/MyProfile'
 import Household from './pages/mypage/Household'
@@ -36,6 +36,7 @@ import StaffTshirt from './pages/staff/StaffTshirt'
 import StaffFeedback from './pages/staff/StaffFeedback'
 import StaffRoles from './pages/staff/StaffRoles'
 import StaffEventResults from './pages/staff/StaffEventResults'
+import StaffAnnouncements from './pages/staff/StaffAnnouncements'
 
 export default function App() {
   return (
@@ -55,7 +56,7 @@ export default function App() {
         <Route path="/roles" element={<RolesHistory />} />
         <Route path="/about" element={<About />} />
         <Route path="/photos" element={<PhotosIndex />} />
-        <Route path="/news" element={<Placeholder title="お知らせ" />} />
+        <Route path="/news" element={<News />} />
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/mypage/profile" element={<MyProfile />} />
@@ -81,6 +82,7 @@ export default function App() {
         <Route path="/staff/tshirt" element={<StaffTshirt />} />
         <Route path="/staff/feedback" element={<StaffFeedback />} />
         <Route path="/staff/roles" element={<StaffRoles />} />
+        <Route path="/staff/announcements" element={<StaffAnnouncements />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

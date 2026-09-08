@@ -43,6 +43,17 @@ export default function EventDetail() {
 
   useEffect(() => { load() }, [load])
 
+  // 参加人数のリアルタイム更新
+  useEffect(() => {
+    if (!id) return
+    const ch = supabase
+      .channel(`event-${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'participations', filter: `event_id=eq.${id}` }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'participation_members' }, () => load())
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [id, load])
+
   if (loading) return <Spinner />
   if (!event) return <Card><p>イベントが見つかりません。</p><Link to="/events" className="text-brand-red underline">一覧へ戻る</Link></Card>
 
