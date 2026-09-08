@@ -7,6 +7,8 @@ import RegisterProfile from './pages/RegisterProfile'
 import Home from './pages/Home'
 import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
+import EventPhotos from './pages/EventPhotos'
+import PhotosIndex from './pages/PhotosIndex'
 import AnnualPlan from './pages/AnnualPlan'
 import About from './pages/About'
 import Placeholder from './pages/Placeholder'
@@ -29,9 +31,10 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
+        <Route path="/events/:id/photos" element={<EventPhotos />} />
         <Route path="/annual" element={<AnnualPlan />} />
         <Route path="/about" element={<About />} />
-        <Route path="/photos" element={<Placeholder title="写真" note="写真共有はフェーズ2で追加されます。" />} />
+        <Route path="/photos" element={<PhotosIndex />} />
         <Route path="/news" element={<Placeholder title="お知らせ" />} />
         <Route path="/feedback" element={<Placeholder title="ご意見・ご質問" />} />
         <Route path="/mypage" element={<MyPage />} />

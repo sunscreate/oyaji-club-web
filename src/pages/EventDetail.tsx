@@ -64,6 +64,16 @@ export default function EventDetail() {
       <InfoRow label="雨天時" value={event.rain_info} />
       <InfoRow label="注意事項" value={event.notes} />
 
+      {event.photos_enabled && (
+        <Link to={`/events/${event.id}/photos`}>
+          <Card className="flex items-center gap-3">
+            <span className="text-2xl">📷</span>
+            <span className="font-extrabold">写真を見る・追加する</span>
+            <span className="ml-auto text-gray-400">›</span>
+          </Card>
+        </Link>
+      )}
+
       {event.attendance_enabled && (
         <Card>
           <h2 className="mb-1 text-sm font-bold text-gray-500">参加予定</h2>
