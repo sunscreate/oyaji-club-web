@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 import { formatDateJP } from '../../lib/format'
 import { Button, Card, EmptyState, PageTitle, Spinner } from '../../components/ui'
 import type { EventRow } from '../../types'
@@ -13,8 +14,11 @@ const STATUS_CLS: Record<string, string> = {
 }
 
 export default function StaffHome() {
+  const { profile } = useAuth()
+  const nav = useNavigate()
   const [events, setEvents] = useState<EventRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('events').select('*').order('event_date', { ascending: false })
@@ -29,11 +33,36 @@ export default function StaffHome() {
     await load()
   }
 
+  async function duplicate(e: EventRow) {
+    setBusy(true)
+    const { data, error } = await supabase.from('events').insert({
+      title: `${e.title}（コピー）`,
+      event_date: e.event_date,
+      start_time: e.start_time,
+      place: e.place,
+      description: e.description,
+      target: e.target,
+      attendance_enabled: e.attendance_enabled,
+      fee_type: e.fee_type,
+      fee_config: e.fee_config,
+      belongings: e.belongings,
+      rain_info: e.rain_info,
+      notes: e.notes,
+      photos_enabled: e.photos_enabled,
+      survey_enabled: e.survey_enabled,
+      is_annual: e.is_annual,
+      status: 'draft',
+      created_by: profile?.id ?? null,
+    }).select('id').single()
+    setBusy(false)
+    if (!error && data) nav(`/staff/events/${(data as { id: string }).id}/edit`)
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <PageTitle>お世話係</PageTitle>
-        <Link to="/" className="text-sm text-gray-500">一般画面へ →</Link>
+        <PageTitle>イベント管理</PageTitle>
+        <Link to="/staff" className="text-sm text-gray-500">← ダッシュボード</Link>
       </div>
 
       <Link to="/staff/events/new"><Button variant="secondary">＋ イベントを作成</Button></Link>
@@ -50,27 +79,24 @@ export default function StaffHome() {
               </div>
               <h3 className="mb-3 text-lg font-extrabold">{e.title}</h3>
               <div className="flex flex-wrap gap-2">
+                <Link to={`/staff/events/${e.id}/participants`} className="rounded-xl bg-brand-red px-4 py-2 text-sm font-bold text-white">参加状況</Link>
                 <Link to={`/staff/events/${e.id}/edit`} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">編集</Link>
+                <button onClick={() => duplicate(e)} disabled={busy} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">複製</button>
                 <Link to={`/events/${e.id}`} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">プレビュー</Link>
                 {e.status !== 'published' && (
-                  <button onClick={() => setStatus(e, 'published')} className="rounded-xl bg-brand-red px-4 py-2 text-sm font-bold text-white">公開する</button>
+                  <button onClick={() => setStatus(e, 'published')} className="rounded-xl bg-brand-yellow px-4 py-2 text-sm font-bold text-black">公開</button>
                 )}
                 {e.status === 'published' && (
                   <button onClick={() => setStatus(e, 'draft')} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">非公開に戻す</button>
                 )}
                 {e.status !== 'finished' && (
-                  <button onClick={() => setStatus(e, 'finished')} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">終了にする</button>
+                  <button onClick={() => setStatus(e, 'finished')} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">終了</button>
                 )}
               </div>
             </Card>
           ))}
         </div>
       )}
-
-      <Card>
-        <h2 className="mb-1 text-sm font-bold text-gray-500">今後のフェーズで追加予定</h2>
-        <p className="text-sm text-gray-500">写真管理 / 準備・買い物 / 会計・立替精算 / 当日受付・当日会計 / アンケート作成・集計 / 過去イベント実績</p>
-      </Card>
     </div>
   )
 }
