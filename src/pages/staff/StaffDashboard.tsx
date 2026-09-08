@@ -76,6 +76,8 @@ export default function StaffDashboard() {
         {next ? <Tile to={`/staff/events/${next.id}/accounting`} icon="💰" label="当日会計" /> : <Tile to="/staff/events" icon="💰" label="当日会計" sub="イベントを選択" />}
         <Tile to="/staff/tshirt" icon="👕" label="Tシャツ集計" />
         <Tile to="/staff/feedback" icon="✉️" label={`ご意見・ご質問${unread > 0 ? `（未確認${unread}）` : ''}`} />
+        <Tile to="/staff/roles" icon="👑" label="役職管理" />
+        <Tile to="/roles" icon="📜" label="歴代役職" />
       </section>
     </div>
   )

@@ -9,20 +9,29 @@ import type { EventRow } from '../../types'
 export default function MyPage() {
   const { profile, roles } = useAuth()
   const [myEvents, setMyEvents] = useState<EventRow[]>([])
+  const [history, setHistory] = useState<{ role: string; year: number | null }[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     ;(async () => {
-      if (!profile?.household_id) { setLoading(false); return }
-      const { data: parts } = await supabase.from('participations').select('event_id').eq('household_id', profile.household_id)
-      const ids = (parts ?? []).map((p) => (p as { event_id: string }).event_id)
-      if (ids.length) {
-        const { data: evs } = await supabase.from('events').select('*').in('id', ids).order('event_date', { ascending: true })
-        setMyEvents(((evs ?? []) as EventRow[]).filter((e) => !isPast(e.event_date)))
+      if (!profile) { setLoading(false); return }
+      const { data: hist } = await supabase
+        .from('roles')
+        .select('role,year')
+        .eq('profile_id', profile.id)
+        .order('year', { ascending: false })
+      setHistory((hist ?? []) as { role: string; year: number | null }[])
+      if (profile.household_id) {
+        const { data: parts } = await supabase.from('participations').select('event_id').eq('household_id', profile.household_id)
+        const ids = (parts ?? []).map((p) => (p as { event_id: string }).event_id)
+        if (ids.length) {
+          const { data: evs } = await supabase.from('events').select('*').in('id', ids).order('event_date', { ascending: true })
+          setMyEvents(((evs ?? []) as EventRow[]).filter((e) => !isPast(e.event_date)))
+        }
       }
       setLoading(false)
     })()
-  }, [profile?.household_id])
+  }, [profile])
 
   return (
     <div className="space-y-4">
@@ -55,8 +64,28 @@ export default function MyPage() {
           </div>
         )}
       </section>
+
+      {history.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-bold text-gray-500">活動・役職履歴</h2>
+          <Card className="space-y-1">
+            {history.map((h, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="w-20 text-sm font-bold text-gray-500">{h.year ?? '—'}年度</span>
+                <span className="font-bold">{ROLE_JP[h.role] ?? h.role}</span>
+              </div>
+            ))}
+          </Card>
+        </section>
+      )}
     </div>
   )
+}
+
+const ROLE_JP: Record<string, string> = {
+  president: '👑 会長',
+  staff: '🔧 お世話係',
+  site_owner: '🛠 サイトオーナー',
 }
 
 function MenuTile({ to, icon, label }: { to: string; icon: string; label: string }) {

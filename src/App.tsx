@@ -13,6 +13,8 @@ import PhotosIndex from './pages/PhotosIndex'
 import AnnualPlan from './pages/AnnualPlan'
 import About from './pages/About'
 import Feedback from './pages/Feedback'
+import RolesHistory from './pages/RolesHistory'
+import PastEvents from './pages/PastEvents'
 import Placeholder from './pages/Placeholder'
 import MyPage from './pages/mypage/MyPage'
 import MyProfile from './pages/mypage/MyProfile'
@@ -32,6 +34,8 @@ import StaffSurveyEditor from './pages/staff/StaffSurveyEditor'
 import StaffSurveyResults from './pages/staff/StaffSurveyResults'
 import StaffTshirt from './pages/staff/StaffTshirt'
 import StaffFeedback from './pages/staff/StaffFeedback'
+import StaffRoles from './pages/staff/StaffRoles'
+import StaffEventResults from './pages/staff/StaffEventResults'
 
 export default function App() {
   return (
@@ -47,6 +51,8 @@ export default function App() {
         <Route path="/events/:id/photos" element={<EventPhotos />} />
         <Route path="/events/:id/survey" element={<EventSurvey />} />
         <Route path="/annual" element={<AnnualPlan />} />
+        <Route path="/past" element={<PastEvents />} />
+        <Route path="/roles" element={<RolesHistory />} />
         <Route path="/about" element={<About />} />
         <Route path="/photos" element={<PhotosIndex />} />
         <Route path="/news" element={<Placeholder title="お知らせ" />} />
@@ -71,8 +77,10 @@ export default function App() {
         <Route path="/staff/events/:id/accounting" element={<StaffAccounting />} />
         <Route path="/staff/events/:id/survey" element={<StaffSurveyEditor />} />
         <Route path="/staff/events/:id/survey-results" element={<StaffSurveyResults />} />
+        <Route path="/staff/events/:id/results" element={<StaffEventResults />} />
         <Route path="/staff/tshirt" element={<StaffTshirt />} />
         <Route path="/staff/feedback" element={<StaffFeedback />} />
+        <Route path="/staff/roles" element={<StaffRoles />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
