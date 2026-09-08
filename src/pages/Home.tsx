@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatDateJP, formatTimeRange } from '../lib/format'
 import { Button, Card, Spinner } from '../components/ui'
 import type { EventRow } from '../types'
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
 export default function Home() {
   const [next, setNext] = useState<EventRow | null>(null)
@@ -72,11 +73,10 @@ function FlyerPreview({ event, url }: { event: EventRow; url: string }) {
   const framed = 'mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm'
   const canvas = 'flex aspect-[210/297] max-h-[520px] w-full items-center justify-center bg-gray-50'
   if (event.media_kind === 'pdf') {
-    const pdfUrl = `${url}#view=Fit&toolbar=0&navpanes=0`
     return (
       <div className={framed}>
         <div className={canvas}>
-          <iframe src={pdfUrl} title={`${event.title} チラシ`} className="h-full w-full bg-white" />
+          <PdfFlyerCanvas url={url} title={`${event.title} チラシ`} />
         </div>
         <a href={url} target="_blank" rel="noopener noreferrer" className="block border-t border-gray-200 bg-white px-4 py-3 text-center text-sm font-bold text-brand-red">
           PDFチラシを開く
@@ -91,6 +91,41 @@ function FlyerPreview({ event, url }: { event: EventRow; url: string }) {
       </div>
     </div>
   )
+}
+
+function PdfFlyerCanvas({ url, title }: { url: string; title: string }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const pdfjs = await import('pdfjs-dist')
+        pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
+        const pdf = await pdfjs.getDocument({ url }).promise
+        const page = await pdf.getPage(1)
+        const viewport = page.getViewport({ scale: 1 })
+        const scale = Math.min(1200 / viewport.width, 1700 / viewport.height)
+        const renderViewport = page.getViewport({ scale })
+        const canvas = ref.current
+        const ctx = canvas?.getContext('2d')
+        if (!canvas || !ctx || cancelled) return
+        canvas.width = Math.floor(renderViewport.width)
+        canvas.height = Math.floor(renderViewport.height)
+        await page.render({ canvas, canvasContext: ctx, viewport: renderViewport }).promise
+      } catch (e) {
+        console.error('PDF preview failed', e)
+        if (!cancelled) setFailed(true)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [url])
+
+  if (failed) {
+    return <div className="px-4 text-center text-sm font-bold text-gray-500">PDFチラシを下のボタンから開けます</div>
+  }
+  return <canvas ref={ref} aria-label={title} className="h-full w-full object-contain" />
 }
 
 function Tile({ to, icon, label }: { to: string; icon: string; label: string }) {
