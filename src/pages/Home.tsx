@@ -69,17 +69,28 @@ export default function Home() {
 }
 
 function FlyerPreview({ event, url }: { event: EventRow; url: string }) {
+  const framed = 'mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm'
+  const canvas = 'flex aspect-[210/297] max-h-[520px] w-full items-center justify-center bg-gray-50'
   if (event.media_kind === 'pdf') {
+    const pdfUrl = `${url}#view=Fit&toolbar=0&navpanes=0`
     return (
-      <div className="mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
-        <iframe src={url} title={`${event.title} チラシ`} className="h-[420px] w-full bg-white" />
+      <div className={framed}>
+        <div className={canvas}>
+          <iframe src={pdfUrl} title={`${event.title} チラシ`} className="h-full w-full bg-white" />
+        </div>
         <a href={url} target="_blank" rel="noopener noreferrer" className="block border-t border-gray-200 bg-white px-4 py-3 text-center text-sm font-bold text-brand-red">
           PDFチラシを開く
         </a>
       </div>
     )
   }
-  return <img src={url} alt={`${event.title} チラシ`} className="mb-4 w-full rounded-2xl shadow-sm" />
+  return (
+    <div className={framed}>
+      <div className={canvas}>
+        <img src={url} alt={`${event.title} チラシ`} className="h-full w-full object-contain" />
+      </div>
+    </div>
+  )
 }
 
 function Tile({ to, icon, label }: { to: string; icon: string; label: string }) {
