@@ -37,6 +37,8 @@ import StaffFeedback from './pages/staff/StaffFeedback'
 import StaffRoles from './pages/staff/StaffRoles'
 import StaffEventResults from './pages/staff/StaffEventResults'
 import StaffAnnouncements from './pages/staff/StaffAnnouncements'
+import StaffOyajiMembers from './pages/staff/StaffOyajiMembers'
+import StaffMembers from './pages/staff/StaffMembers'
 
 export default function App() {
   return (
@@ -80,6 +82,8 @@ export default function App() {
         <Route path="/staff/events/:id/survey-results" element={<StaffSurveyResults />} />
         <Route path="/staff/events/:id/results" element={<StaffEventResults />} />
         <Route path="/staff/tshirt" element={<StaffTshirt />} />
+        <Route path="/staff/oyaji" element={<StaffOyajiMembers />} />
+        <Route path="/staff/members" element={<StaffMembers />} />
         <Route path="/staff/feedback" element={<StaffFeedback />} />
         <Route path="/staff/roles" element={<StaffRoles />} />
         <Route path="/staff/announcements" element={<StaffAnnouncements />} />

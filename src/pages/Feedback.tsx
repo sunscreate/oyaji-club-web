@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Button, Card, Field, Input, PageTitle, Textarea } from '../components/ui'
+
+interface QA { id: string; content: string; reply: string | null; replied_at: string | null }
 
 export default function Feedback() {
   const { profile } = useAuth()
@@ -11,6 +13,18 @@ export default function Feedback() {
   const [content, setContent] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
+  const [qa, setQa] = useState<QA[]>([])
+
+  async function loadQA() {
+    const { data } = await supabase
+      .from('feedback')
+      .select('id,content,reply,replied_at')
+      .eq('is_published', true)
+      .not('reply', 'is', null)
+      .order('replied_at', { ascending: false })
+    setQa((data ?? []) as QA[])
+  }
+  useEffect(() => { loadQA() }, [])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -26,6 +40,20 @@ export default function Feedback() {
     setDone(true)
   }
 
+  const qaSection = qa.length > 0 && (
+    <section className="mt-8">
+      <h2 className="mb-2 text-sm font-bold text-gray-500">みんなの質問・回答</h2>
+      <div className="space-y-3">
+        {qa.map((q) => (
+          <Card key={q.id}>
+            <p className="font-bold">Q. {q.content}</p>
+            <p className="mt-2 whitespace-pre-wrap rounded-xl bg-red-50 px-3 py-2 text-gray-800">A. {q.reply}</p>
+          </Card>
+        ))}
+      </div>
+    </section>
+  )
+
   if (done) {
     return (
       <div>
@@ -38,6 +66,7 @@ export default function Feedback() {
             <Link to="/" className="flex-1"><Button variant="secondary">ホームへ</Button></Link>
           </div>
         </Card>
+        {qaSection}
       </div>
     )
   }
@@ -61,6 +90,7 @@ export default function Feedback() {
           <Button type="submit" disabled={busy}>{busy ? '…' : '送信する'}</Button>
         </form>
       </Card>
+      {qaSection}
     </div>
   )
 }

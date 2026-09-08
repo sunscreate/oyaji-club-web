@@ -1,49 +1,56 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 import { formatDateJP } from '../../lib/format'
-import { Card, PageTitle, Spinner } from '../../components/ui'
+import { yen } from '../../lib/fee'
+import { Button, Card, Input, PageTitle, Spinner } from '../../components/ui'
 import type { EventRow } from '../../types'
 
 export default function StaffDashboard() {
+  const { isOwner, isPresident } = useAuth()
+  const canEditFunds = isOwner || isPresident
   const [next, setNext] = useState<EventRow | null>(null)
   const [stats, setStats] = useState<{ hh: number; people: number }>({ hh: 0, people: 0 })
   const [unread, setUnread] = useState(0)
+  const [funds, setFunds] = useState<{ base: number; income: number; expense: number; total: number } | null>(null)
+  const [newMembers, setNewMembers] = useState(0)
+  const [baseInput, setBaseInput] = useState('')
+  const [editFunds, setEditFunds] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    ;(async () => {
-      const today = new Date().toISOString().slice(0, 10)
-      const { data } = await supabase
-        .from('events')
-        .select('*')
-        .eq('status', 'published')
-        .gte('event_date', today)
-        .order('event_date', { ascending: true })
-        .limit(1)
-      const ev = ((data ?? [])[0] as EventRow) ?? null
-      setNext(ev)
-      if (ev) {
-        const { data: ps } = await supabase.from('participations').select('id').eq('event_id', ev.id)
-        const pIds = (ps ?? []).map((p) => (p as { id: string }).id)
-        let people = 0
-        if (pIds.length) {
-          const { count } = await supabase
-            .from('participation_members')
-            .select('id', { count: 'exact', head: true })
-            .in('participation_id', pIds)
-          people = count ?? 0
-        }
-        setStats({ hh: pIds.length, people })
+  async function loadAll() {
+    const today = new Date().toISOString().slice(0, 10)
+    const { data } = await supabase.from('events').select('*').eq('status', 'published').gte('event_date', today).order('event_date', { ascending: true }).limit(1)
+    const ev = ((data ?? [])[0] as EventRow) ?? null
+    setNext(ev)
+    if (ev) {
+      const { data: ps } = await supabase.from('participations').select('id').eq('event_id', ev.id)
+      const pIds = (ps ?? []).map((p) => (p as { id: string }).id)
+      let people = 0
+      if (pIds.length) {
+        const { count } = await supabase.from('participation_members').select('id', { count: 'exact', head: true }).in('participation_id', pIds)
+        people = count ?? 0
       }
-      const { count: fbUnread } = await supabase
-        .from('feedback')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'unread')
-      setUnread(fbUnread ?? 0)
-      setLoading(false)
-    })()
-  }, [])
+      setStats({ hh: pIds.length, people })
+    }
+    const { count: fbUnread } = await supabase.from('feedback').select('id', { count: 'exact', head: true }).eq('status', 'unread')
+    setUnread(fbUnread ?? 0)
+    const since = new Date(Date.now() - 7 * 86400000).toISOString()
+    const { count: nm } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('oyaji_member', true).gte('oyaji_joined_at', since)
+    setNewMembers(nm ?? 0)
+    const { data: fd } = await supabase.rpc('get_club_funds')
+    if (fd) { setFunds(fd as never); setBaseInput(String((fd as { base: number }).base)) }
+    setLoading(false)
+  }
+
+  useEffect(() => { loadAll() }, [])
+
+  async function saveFunds() {
+    await supabase.rpc('set_club_base_funds', { p_amount: Number(baseInput) || 0 })
+    setEditFunds(false)
+    await loadAll()
+  }
 
   return (
     <div className="space-y-4">
@@ -51,6 +58,34 @@ export default function StaffDashboard() {
         <PageTitle>お世話係</PageTitle>
         <Link to="/" className="text-sm text-gray-500">一般画面へ →</Link>
       </div>
+
+      {/* おやじ倶楽部 総予算 */}
+      <Card>
+        <p className="text-sm text-gray-500">おやじ倶楽部 総予算（現在残高）</p>
+        <p className="text-3xl font-extrabold text-brand-red">{funds ? yen(funds.total) : '—'}</p>
+        {funds && (
+          <p className="mt-1 text-xs text-gray-500">初期資金 {yen(funds.base)} ＋ 集金 {yen(funds.income)} − 立替 {yen(funds.expense)}</p>
+        )}
+        {canEditFunds && (
+          editFunds ? (
+            <div className="mt-3 flex gap-2">
+              <Input type="number" inputMode="numeric" value={baseInput} onChange={(e) => setBaseInput(e.target.value)} className="flex-1" placeholder="初期資金/繰越金" />
+              <Button variant="ghost" className="w-auto shrink-0 px-4" onClick={saveFunds}>保存</Button>
+            </div>
+          ) : (
+            <button onClick={() => setEditFunds(true)} className="mt-2 text-xs font-bold text-brand-red">初期資金・繰越金を設定</button>
+          )
+        )}
+      </Card>
+
+      {newMembers > 0 && (
+        <Link to="/staff/oyaji">
+          <div className="rounded-2xl bg-brand-yellow p-4 text-black shadow-sm">
+            <p className="font-extrabold">🦁 おやじ倶楽部に新規加盟がありました！（{newMembers}名）</p>
+            <p className="text-sm">タップして加盟者・Tシャツサイズを確認 ›</p>
+          </div>
+        </Link>
+      )}
 
       <section>
         <h2 className="mb-2 text-sm font-bold text-gray-500">次回イベント</h2>
@@ -72,12 +107,14 @@ export default function StaffDashboard() {
       <section className="grid grid-cols-2 gap-3">
         <Tile to="/staff/events" icon="🎪" label="イベント管理" />
         <Tile to="/staff/events/new" icon="➕" label="イベント作成" />
+        {next ? <Tile to={`/staff/events/${next.id}/reception`} icon="✅" label="当日受付・集金" /> : <Tile to="/staff/events" icon="✅" label="当日受付・集金" sub="イベントを選択" />}
         {next ? <Tile to={`/staff/events/${next.id}/prep`} icon="🛒" label="準備・買い物" /> : <Tile to="/staff/events" icon="🛒" label="準備・買い物" sub="イベントを選択" />}
-        {next ? <Tile to={`/staff/events/${next.id}/accounting`} icon="💰" label="当日会計" /> : <Tile to="/staff/events" icon="💰" label="当日会計" sub="イベントを選択" />}
-        <Tile to="/staff/tshirt" icon="👕" label="Tシャツ集計" />
+        <Tile to="/staff/oyaji" icon="🦁" label="加盟者名簿" />
+        <Tile to="/staff/members" icon="📇" label="アカウント名簿" />
         <Tile to="/staff/feedback" icon="✉️" label={`ご意見・ご質問${unread > 0 ? `（未確認${unread}）` : ''}`} />
-        <Tile to="/staff/roles" icon="👑" label="役職管理" />
         <Tile to="/staff/announcements" icon="📢" label="お知らせ管理" />
+        <Tile to="/staff/roles" icon="👑" label="役職管理" />
+        <Tile to="/staff/tshirt" icon="👕" label="Tシャツ集計" />
       </section>
     </div>
   )

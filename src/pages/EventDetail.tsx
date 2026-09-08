@@ -19,12 +19,20 @@ export default function EventDetail() {
   const [parts, setParts] = useState<Part[]>([])
   const [members, setMembers] = useState<PMember[]>([])
   const [households, setHouseholds] = useState<Record<string, string>>({})
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     if (!id) return
     const { data: ev } = await supabase.from('events').select('*').eq('id', id).maybeSingle()
     setEvent((ev as EventRow) ?? null)
+    const evRow = ev as (EventRow & { media_kind?: string | null }) | null
+    if (evRow?.image_path) {
+      const { data: signed } = await supabase.storage.from('event-media').createSignedUrl(evRow.image_path, 3600)
+      setMediaUrl(signed?.signedUrl ?? null)
+    } else {
+      setMediaUrl(null)
+    }
     const { data: ps } = await supabase.from('participations').select('*').eq('event_id', id)
     const partList = (ps ?? []) as Part[]
     setParts(partList)
@@ -69,6 +77,20 @@ export default function EventDetail() {
         <h1 className="text-2xl font-extrabold">{event.title}</h1>
         {event.place && <p className="text-gray-600">📍 {event.place}</p>}
       </div>
+
+      {mediaUrl && (
+        event.media_kind === 'pdf' ? (
+          <a href={mediaUrl} target="_blank" rel="noopener noreferrer">
+            <Card className="flex items-center gap-3">
+              <span className="text-2xl">📄</span>
+              <span className="font-extrabold">チラシ（PDF）を開く</span>
+              <span className="ml-auto text-gray-400">›</span>
+            </Card>
+          </a>
+        ) : (
+          <img src={mediaUrl} alt={event.title} className="w-full rounded-2xl shadow-sm" />
+        )
+      )}
 
       {event.description && <Card><p className="whitespace-pre-wrap">{event.description}</p></Card>}
 

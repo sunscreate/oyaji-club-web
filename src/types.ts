@@ -49,6 +49,7 @@ export interface EventRow {
   description: string | null
   image_path: string | null
   flyer_path: string | null
+  media_kind: string | null
   target: 'current' | 'ob' | 'both'
   attendance_enabled: boolean
   fee_type: string

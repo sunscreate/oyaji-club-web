@@ -19,6 +19,7 @@ export default function Signup() {
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [sent, setSent] = useState(false)
+  const [doneName, setDoneName] = useState<string | null>(null)
   const nav = useNavigate()
 
   async function onSubmit(e: React.FormEvent) {
@@ -44,11 +45,26 @@ export default function Signup() {
         setErr(r.message)
         return
       }
-      nav('/')
+      setDoneName(meta.full_name)
     } else {
       setBusy(false)
       setSent(true)
     }
+  }
+
+  if (doneName) {
+    return (
+      <PlainLayout>
+        <Card>
+          <h1 className="mb-2 text-xl font-extrabold text-green-700">登録が完了しました！</h1>
+          <p className="text-gray-700">{doneName} さんとして登録されました。このまま利用を始めるか、ログイン画面に戻れます。</p>
+          <div className="mt-6 space-y-3">
+            <Button onClick={() => nav('/')}>このまま始める（ホームへ）</Button>
+            <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); nav('/login') }}>ログイン画面へ戻る</Button>
+          </div>
+        </Card>
+      </PlainLayout>
+    )
   }
 
   if (sent) {

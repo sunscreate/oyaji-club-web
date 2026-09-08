@@ -67,21 +67,32 @@ export default function StaffPrep() {
       <PageTitle>準備・買い物</PageTitle>
 
       <Card>
-        <div className="mb-3 grid grid-cols-2 gap-2 text-center">
+        <div className={`rounded-2xl p-4 text-center ${remain < 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
+          <p className="text-sm text-gray-500">残予算</p>
+          <p className={`text-3xl font-extrabold ${remain < 0 ? 'text-brand-red' : 'text-black'}`}>{yen(remain)}</p>
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           <Metric label="予算" value={yen(budgetNum)} />
           <Metric label="予定支出" value={yen(planned)} />
           <Metric label="購入済み" value={yen(bought)} />
-          <Metric label="残予算" value={yen(remain)} accent={remain < 0} />
         </div>
-        <div className="flex items-end gap-2">
-          <div className="flex-1">
-            <Field label="予算（円）">
-              <Input type="number" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="60000" />
-            </Field>
+
+        <div className="mt-4">
+          <label className="mb-1 block text-sm font-bold text-gray-700">予算を設定（円）</label>
+          <div className="flex gap-2">
+            <Input type="number" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="60000" className="flex-1" />
+            <Button variant="ghost" className="w-auto shrink-0 px-5" onClick={saveBudget}>保存</Button>
           </div>
-          <Button variant="ghost" className="w-auto px-4" onClick={saveBudget}>保存</Button>
         </div>
-        <p className="mt-2 text-sm text-gray-500">準備 {doneCount} / {items.length} 完了</p>
+
+        <div className="mt-4">
+          <div className="mb-1 flex justify-between text-sm text-gray-500">
+            <span>準備の進捗</span><span className="font-bold">{doneCount} / {items.length} 完了</span>
+          </div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
+            <div className="h-full rounded-full bg-green-600" style={{ width: `${items.length ? (doneCount / items.length) * 100 : 0}%` }} />
+          </div>
+        </div>
       </Card>
 
       {items.map((it) => {
