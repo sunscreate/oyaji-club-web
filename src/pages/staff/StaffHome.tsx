@@ -39,6 +39,7 @@ export default function StaffHome() {
       title: `${e.title}（コピー）`,
       event_date: e.event_date,
       start_time: e.start_time,
+      end_time: e.end_time,
       place: e.place,
       description: e.description,
       target: e.target,

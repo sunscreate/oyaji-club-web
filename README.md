@@ -1,7 +1,7 @@
 # さぎぬま幼稚園 おやじ倶楽部 Web
 
 在園児の保護者向けの、イベント告知・参加確認・写真共有などを1か所にまとめる会員制サイト。
-スマホ最優先・無料運用を基本方針とする。**動画機能は一切実装しない（画像のみ）。**
+スマホ最優先・無料運用を基本方針とする。**動画機能は一切実装しない。写真は画像のみ、イベント告知チラシは画像/PDFに対応。**
 
 - フロント: React + Vite + TypeScript + Tailwind CSS（HashRouter）
 - バックエンド: Supabase（Auth / PostgreSQL / RLS / Storage）
@@ -36,6 +36,10 @@ npm run dev               # http://localhost:5173
    - `supabase/migrations/0004_surveys.sql`（アンケート・ご意見テーブル・ポリシー）
    - `supabase/migrations/0005_roles.sql`（役職の任命RPC・歴代取得関数）
    - `supabase/migrations/0006_announcements.sql`（お知らせテーブル・参加人数のRealtime設定）
+   - `supabase/migrations/0007_updates.sql`（告知メディア・加盟者・総予算・意見返信・管理削除）
+   - `supabase/migrations/0008_self_delete.sql`（本人のアカウント削除）
+   - `supabase/migrations/0009_fk_setnull.sql`（削除時のFK調整）
+   - `supabase/migrations/0010_event_end_time_and_owner_trigger.sql`（イベント終了時間・オーナー自動付与トリガー）
    - `supabase/seed.sql`（園コード・クラス・オーナー設定 ※後述）
 3. **Authentication > Providers > Email** を有効化。
    本番運用では **Confirm email = ON** を推奨（実在アドレスの確認）。
@@ -65,11 +69,12 @@ npm run dev               # http://localhost:5173
    update app_config set signup_code = 'SAGINUMA2026' where id = 1;
    ```
    このコードを LINE 等で保護者に配布する。変更すれば以後の新規登録を止められる。
-2. **クラス登録**: `insert into classes ...` を実際の組名に合わせて編集。
+2. **クラス登録**: 初期投入は `insert into classes ...` を実際の組名に合わせて編集。運用開始後はサイト内の「お世話係 > クラス管理」から追加・修正できる。
 3. **サイトオーナー設定**:
    - まず自分がサイトから「新規登録（園コード入力）」を完了する。
    - `seed.sql` の `<YOUR_EMAIL>` を自分のメールに変え、オーナー付与SQLを実行。
-   - オーナー権限は永久保持（会長職とは独立）。会長・お世話係の付与は今後のフェーズでサイトから操作可能にする。
+   - `0010` 実行後は `sunscreate528@gmail.com` の初回登録時にオーナー・会長が自動付与される。
+   - オーナー権限は永久保持（会長職とは独立）。会長・お世話係の付与はサイト内の「お世話係 > 役職管理」から操作できる。
 
 ## 5. GitHub リポジトリ & Pages 公開
 
@@ -131,5 +136,7 @@ supabase/
 - **Phase 4（済）**: 会計（準備・買い物＋予算、レシート画像＋立替精算、料金形式、当日受付＋ゲスト参加、当日会計＋金額変更＋集計）
 - **Phase 5（済）**: アンケート（設問作成/並替・5段階/単一/複数/はいいいえ/自由記述・回答・自動集計）・Tシャツサイズ集計・ご意見/質問（匿名可・未確認管理）
 - **Phase 6（済）**: 役職の任命UI（会長がお世話係任命/解除・次期会長指名、オーナーは強制変更）・年度別役職履歴・歴代役職ページ・マイページ役職履歴・過去イベント年度別・イベント実績（参加/収入/支出/収支・前年実績リンク）
-- Phase 7: 仕上げ（Realtime人数・お知らせ・PWA検討）
-- Phase 7: HEIC変換・Realtime・お知らせ・PWA検討
+- **Phase 7（済）**: お知らせ・参加人数Realtime・PWA対応
+- **Phase 8（済）**: 告知画像/PDF・加盟者名簿・アカウント名簿・ご意見返信公開・受付集金・総予算・アカウント削除
+- **Phase 8.3（済）**: イベント終了時間・ホームのチラシ表示・お世話係クラス管理
+- 今後: Supabase自動停止対策、運用テスト、スマホ実機での表示調整

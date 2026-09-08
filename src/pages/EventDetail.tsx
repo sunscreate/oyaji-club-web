@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useClasses, classLabel } from '../hooks/useClasses'
-import { formatDateJP } from '../lib/format'
+import { formatDateJP, formatTimeRange } from '../lib/format'
 import { feeLabel, type FeeConfig } from '../lib/fee'
 import { Button, Card, ErrorText, Field, Input, Spinner, Textarea } from '../components/ui'
 import type { Child, ClassRow, EventRow, Profile } from '../types'
@@ -73,7 +73,7 @@ export default function EventDetail() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-lg font-bold text-brand-red">{formatDateJP(event.event_date)}{event.start_time ? ` ${event.start_time}` : ''}</p>
+        <p className="text-lg font-bold text-brand-red">{formatDateJP(event.event_date)}{formatTimeRange(event.start_time, event.end_time) ? ` ${formatTimeRange(event.start_time, event.end_time)}` : ''}</p>
         <h1 className="text-2xl font-extrabold">{event.title}</h1>
         {event.place && <p className="text-gray-600">📍 {event.place}</p>}
       </div>

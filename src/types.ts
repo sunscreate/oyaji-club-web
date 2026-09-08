@@ -45,6 +45,7 @@ export interface EventRow {
   title: string
   event_date: string
   start_time: string | null
+  end_time: string | null
   place: string | null
   description: string | null
   image_path: string | null

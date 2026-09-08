@@ -25,8 +25,9 @@ export default function StaffEventForm() {
   const [err, setErr] = useState('')
 
   const [f, setF] = useState({
-    title: '', event_date: '', start_time: '', place: '', description: '',
+    title: '', event_date: '', start_time: '', end_time: '', place: '', description: '',
     target: 'both', attendance_enabled: true, is_annual: false, belongings: '', rain_info: '', notes: '',
+    photos_enabled: true, survey_enabled: false,
   })
   const [feeType, setFeeType] = useState<'household' | 'per_person'>('household')
   const [feeHousehold, setFeeHousehold] = useState('')
@@ -46,9 +47,10 @@ export default function StaffEventForm() {
       const e = data as (EventRow & { media_kind?: string | null }) | null
       if (e) {
         setF({
-          title: e.title, event_date: e.event_date, start_time: e.start_time ?? '', place: e.place ?? '',
+          title: e.title, event_date: e.event_date, start_time: e.start_time ?? '', end_time: e.end_time ?? '', place: e.place ?? '',
           description: e.description ?? '', target: e.target, attendance_enabled: e.attendance_enabled,
           is_annual: e.is_annual, belongings: e.belongings ?? '', rain_info: e.rain_info ?? '', notes: e.notes ?? '',
+          photos_enabled: e.photos_enabled, survey_enabled: e.survey_enabled,
         })
         const cfg = (e.fee_config ?? {}) as { household?: number; adult?: number; child?: number }
         setFeeType(e.fee_type === 'per_person' ? 'per_person' : 'household')
@@ -93,6 +95,7 @@ export default function StaffEventForm() {
         ...f,
         title: f.title.trim(),
         start_time: f.start_time || null,
+        end_time: f.end_time || null,
         place: f.place || null,
         description: f.description || null,
         belongings: f.belongings || null,
@@ -148,12 +151,20 @@ export default function StaffEventForm() {
           <Field label="開催日 *">
             <Input type="date" value={f.event_date} onChange={(e) => set('event_date', e.target.value)} />
           </Field>
-          <Field label="開始時間">
-            <Select value={f.start_time} onChange={(e) => set('start_time', e.target.value)}>
-              <option value="">未定</option>
-              {TIME_OPTIONS.filter(Boolean).map((t) => <option key={t} value={t}>{t}</option>)}
-            </Select>
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="開始時間">
+              <Select value={f.start_time} onChange={(e) => set('start_time', e.target.value)}>
+                <option value="">未定</option>
+                {TIME_OPTIONS.filter(Boolean).map((t) => <option key={t} value={t}>{t}</option>)}
+              </Select>
+            </Field>
+            <Field label="終了時間">
+              <Select value={f.end_time} onChange={(e) => set('end_time', e.target.value)}>
+                <option value="">未定</option>
+                {TIME_OPTIONS.filter(Boolean).map((t) => <option key={t} value={t}>{t}</option>)}
+              </Select>
+            </Field>
+          </div>
 
           <Field label="場所">
             <Input value={f.place} onChange={(e) => set('place', e.target.value)} placeholder="園庭" />
@@ -222,6 +233,8 @@ export default function StaffEventForm() {
           </Field>
 
           <ToggleRow label="参加確認を受け付ける" checked={f.attendance_enabled} onChange={(v) => set('attendance_enabled', v)} />
+          <ToggleRow label="写真共有を使う" checked={f.photos_enabled} onChange={(v) => set('photos_enabled', v)} />
+          <ToggleRow label="アンケートを使う" checked={f.survey_enabled} onChange={(v) => set('survey_enabled', v)} />
           <ToggleRow label="年間予定に含める（総会・懇親会・お手伝い等）" checked={f.is_annual} onChange={(v) => set('is_annual', v)} />
 
           <ErrorText>{err}</ErrorText>

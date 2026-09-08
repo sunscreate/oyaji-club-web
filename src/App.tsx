@@ -39,6 +39,7 @@ import StaffEventResults from './pages/staff/StaffEventResults'
 import StaffAnnouncements from './pages/staff/StaffAnnouncements'
 import StaffOyajiMembers from './pages/staff/StaffOyajiMembers'
 import StaffMembers from './pages/staff/StaffMembers'
+import StaffClasses from './pages/staff/StaffClasses'
 
 export default function App() {
   return (
@@ -87,6 +88,7 @@ export default function App() {
         <Route path="/staff/feedback" element={<StaffFeedback />} />
         <Route path="/staff/roles" element={<StaffRoles />} />
         <Route path="/staff/announcements" element={<StaffAnnouncements />} />
+        <Route path="/staff/classes" element={<StaffClasses />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

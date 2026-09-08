@@ -18,3 +18,10 @@ export function isPast(iso: string): boolean {
   const d = new Date(iso + 'T23:59:59')
   return d.getTime() < Date.now()
 }
+
+export function formatTimeRange(start?: string | null, end?: string | null): string {
+  if (start && end) return `${start}〜${end}`
+  if (start) return start
+  if (end) return `終了 ${end}`
+  return ''
+}

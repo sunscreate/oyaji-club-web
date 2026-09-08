@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatDateJP } from '../lib/format'
+import { formatDateJP, formatTimeRange } from '../lib/format'
 import { Button, Card, Spinner } from '../components/ui'
 import type { EventRow } from '../types'
 
 export default function Home() {
   const [next, setNext] = useState<EventRow | null>(null)
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -19,7 +20,14 @@ export default function Home() {
         .gte('event_date', today)
         .order('event_date', { ascending: true })
         .limit(1)
-      setNext(((data ?? [])[0] as EventRow) ?? null)
+      const ev = ((data ?? [])[0] as EventRow) ?? null
+      setNext(ev)
+      if (ev?.image_path) {
+        const { data: signed } = await supabase.storage.from('event-media').createSignedUrl(ev.image_path, 3600)
+        setMediaUrl(signed?.signedUrl ?? null)
+      } else {
+        setMediaUrl(null)
+      }
       setLoading(false)
     })()
   }, [])
@@ -32,7 +40,8 @@ export default function Home() {
           <Spinner />
         ) : next ? (
           <Card>
-            <p className="text-lg font-bold text-brand-red">{formatDateJP(next.event_date)}</p>
+            {mediaUrl && <FlyerPreview event={next} url={mediaUrl} />}
+            <p className="text-lg font-bold text-brand-red">{formatDateJP(next.event_date)}{formatTimeRange(next.start_time, next.end_time) ? ` ${formatTimeRange(next.start_time, next.end_time)}` : ''}</p>
             <h3 className="mb-1 text-2xl font-extrabold">{next.title}</h3>
             {next.place && <p className="mb-4 text-gray-600">📍 {next.place}</p>}
             <div className="grid grid-cols-2 gap-3">
@@ -57,6 +66,20 @@ export default function Home() {
       </section>
     </div>
   )
+}
+
+function FlyerPreview({ event, url }: { event: EventRow; url: string }) {
+  if (event.media_kind === 'pdf') {
+    return (
+      <div className="mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+        <iframe src={url} title={`${event.title} チラシ`} className="h-[420px] w-full bg-white" />
+        <a href={url} target="_blank" rel="noopener noreferrer" className="block border-t border-gray-200 bg-white px-4 py-3 text-center text-sm font-bold text-brand-red">
+          PDFチラシを開く
+        </a>
+      </div>
+    )
+  }
+  return <img src={url} alt={`${event.title} チラシ`} className="mb-4 w-full rounded-2xl shadow-sm" />
 }
 
 function Tile({ to, icon, label }: { to: string; icon: string; label: string }) {

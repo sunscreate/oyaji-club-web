@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { formatDateJP } from '../../lib/format'
+import { formatDateJP, formatTimeRange } from '../../lib/format'
 import { yen } from '../../lib/fee'
 import { Button, Card, Input, PageTitle, Spinner } from '../../components/ui'
 import type { EventRow } from '../../types'
@@ -68,9 +68,12 @@ export default function StaffDashboard() {
         )}
         {canEditFunds && (
           editFunds ? (
-            <div className="mt-3 flex gap-2">
-              <Input type="number" inputMode="numeric" value={baseInput} onChange={(e) => setBaseInput(e.target.value)} className="flex-1" placeholder="初期資金/繰越金" />
-              <Button variant="ghost" className="w-auto shrink-0 px-4" onClick={saveFunds}>保存</Button>
+            <div className="mt-3 space-y-2">
+              <Input type="number" inputMode="numeric" value={baseInput} onChange={(e) => setBaseInput(e.target.value)} placeholder="初期資金/繰越金" />
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="ghost" className="py-3 text-base" onClick={() => { setEditFunds(false); setBaseInput(funds ? String(funds.base) : '') }}>やめる</Button>
+                <Button variant="secondary" className="py-3 text-base" onClick={saveFunds}>保存</Button>
+              </div>
             </div>
           ) : (
             <button onClick={() => setEditFunds(true)} className="mt-2 text-xs font-bold text-brand-red">初期資金・繰越金を設定</button>
@@ -91,7 +94,7 @@ export default function StaffDashboard() {
         <h2 className="mb-2 text-sm font-bold text-gray-500">次回イベント</h2>
         {loading ? <Spinner /> : next ? (
           <Card>
-            <p className="text-sm font-bold text-brand-red">{formatDateJP(next.event_date)}{next.start_time ? ` ${next.start_time}` : ''}</p>
+            <p className="text-sm font-bold text-brand-red">{formatDateJP(next.event_date)}{formatTimeRange(next.start_time, next.end_time) ? ` ${formatTimeRange(next.start_time, next.end_time)}` : ''}</p>
             <h3 className="mb-3 text-xl font-extrabold">{next.title}</h3>
             <div className="mb-3 rounded-xl bg-gray-50 p-3">
               <p className="text-sm text-gray-500">参加</p>
@@ -113,6 +116,7 @@ export default function StaffDashboard() {
         <Tile to="/staff/members" icon="📇" label="アカウント名簿" />
         <Tile to="/staff/feedback" icon="✉️" label={`ご意見・ご質問${unread > 0 ? `（未確認${unread}）` : ''}`} />
         <Tile to="/staff/announcements" icon="📢" label="お知らせ管理" />
+        <Tile to="/staff/classes" icon="🏷" label="クラス管理" />
         <Tile to="/staff/roles" icon="👑" label="役職管理" />
         <Tile to="/staff/tshirt" icon="👕" label="Tシャツ集計" />
       </section>
