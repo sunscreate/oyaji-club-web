@@ -66,8 +66,8 @@ export default function StaffDashboard() {
       <section className="grid grid-cols-2 gap-3">
         <Tile to="/staff/events" icon="🎪" label="イベント管理" />
         <Tile to="/staff/events/new" icon="➕" label="イベント作成" />
-        <Tile to="/staff/prep" icon="🛒" label="準備・買い物" sub="準備中" />
-        <Tile to="/staff/accounting" icon="💰" label="会計" sub="準備中" />
+        {next ? <Tile to={`/staff/events/${next.id}/prep`} icon="🛒" label="準備・買い物" /> : <Tile to="/staff/events" icon="🛒" label="準備・買い物" sub="イベントを選択" />}
+        {next ? <Tile to={`/staff/events/${next.id}/accounting`} icon="💰" label="当日会計" /> : <Tile to="/staff/events" icon="💰" label="当日会計" sub="イベントを選択" />}
       </section>
     </div>
   )

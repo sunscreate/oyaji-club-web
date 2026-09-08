@@ -79,7 +79,7 @@ export default function StaffHome() {
               </div>
               <h3 className="mb-3 text-lg font-extrabold">{e.title}</h3>
               <div className="flex flex-wrap gap-2">
-                <Link to={`/staff/events/${e.id}/participants`} className="rounded-xl bg-brand-red px-4 py-2 text-sm font-bold text-white">参加状況</Link>
+                <Link to={`/staff/events/${e.id}`} className="rounded-xl bg-brand-red px-4 py-2 text-sm font-bold text-white">管理</Link>
                 <Link to={`/staff/events/${e.id}/edit`} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">編集</Link>
                 <button onClick={() => duplicate(e)} disabled={busy} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">複製</button>
                 <Link to={`/events/${e.id}`} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">プレビュー</Link>

@@ -28,6 +28,10 @@ export default function StaffEventForm() {
     rain_info: '',
     notes: '',
   })
+  const [feeType, setFeeType] = useState<'household' | 'per_person'>('household')
+  const [feeHousehold, setFeeHousehold] = useState('')
+  const [feeAdult, setFeeAdult] = useState('')
+  const [feeChild, setFeeChild] = useState('')
 
   useEffect(() => {
     if (!editing) return
@@ -40,6 +44,11 @@ export default function StaffEventForm() {
           description: e.description ?? '', target: e.target, attendance_enabled: e.attendance_enabled,
           is_annual: e.is_annual, belongings: e.belongings ?? '', rain_info: e.rain_info ?? '', notes: e.notes ?? '',
         })
+        const cfg = (e.fee_config ?? {}) as { household?: number; adult?: number; child?: number }
+        setFeeType(e.fee_type === 'per_person' ? 'per_person' : 'household')
+        setFeeHousehold(cfg.household != null ? String(cfg.household) : '')
+        setFeeAdult(cfg.adult != null ? String(cfg.adult) : '')
+        setFeeChild(cfg.child != null ? String(cfg.child) : '')
       }
       setLoading(false)
     })()
@@ -51,6 +60,9 @@ export default function StaffEventForm() {
     setErr('')
     if (!f.title.trim() || !f.event_date) { setErr('イベント名と開催日は必須です。'); return }
     setBusy(true)
+    const fee_config = feeType === 'per_person'
+      ? { adult: Number(feeAdult) || 0, child: Number(feeChild) || 0 }
+      : { household: Number(feeHousehold) || 0 }
     const payload = {
       ...f,
       title: f.title.trim(),
@@ -60,6 +72,8 @@ export default function StaffEventForm() {
       belongings: f.belongings || null,
       rain_info: f.rain_info || null,
       notes: f.notes || null,
+      fee_type: feeType,
+      fee_config,
       status,
       created_by: profile?.id ?? null,
     }
@@ -103,6 +117,30 @@ export default function StaffEventForm() {
               <option value="ob">OBのみ</option>
             </Select>
           </Field>
+          <div className="rounded-xl bg-gray-50 p-3">
+            <p className="mb-2 text-sm font-bold text-gray-700">参加費</p>
+            <Select value={feeType} onChange={(e) => setFeeType(e.target.value as 'household' | 'per_person')}>
+              <option value="household">1世帯あたり</option>
+              <option value="per_person">大人・子ども別</option>
+            </Select>
+            {feeType === 'household' ? (
+              <div className="mt-2">
+                <Field label="1世帯の金額（円）">
+                  <Input type="number" inputMode="numeric" value={feeHousehold} onChange={(e) => setFeeHousehold(e.target.value)} placeholder="500" />
+                </Field>
+              </div>
+            ) : (
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <Field label="大人（円）">
+                  <Input type="number" inputMode="numeric" value={feeAdult} onChange={(e) => setFeeAdult(e.target.value)} placeholder="500" />
+                </Field>
+                <Field label="子ども（円）">
+                  <Input type="number" inputMode="numeric" value={feeChild} onChange={(e) => setFeeChild(e.target.value)} placeholder="300" />
+                </Field>
+              </div>
+            )}
+          </div>
+
           <Field label="持ち物">
             <Textarea rows={2} value={f.belongings} onChange={(e) => set('belongings', e.target.value)} />
           </Field>

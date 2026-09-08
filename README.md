@@ -32,6 +32,7 @@ npm run dev               # http://localhost:5173
 2. **SQL Editor** で以下を順に実行:
    - `supabase/migrations/0001_init.sql`（テーブル・RLS・関数）
    - `supabase/migrations/0002_photos.sql`（写真テーブル・Privateバケット `event-photos`・Storageポリシー）
+   - `supabase/migrations/0003_accounting.sql`（会計系テーブル・Privateバケット `receipts`・職員のみポリシー）
    - `supabase/seed.sql`（園コード・クラス・オーナー設定 ※後述）
 3. **Authentication > Providers > Email** を有効化。
    本番運用では **Confirm email = ON** を推奨（実在アドレスの確認）。
@@ -123,8 +124,8 @@ supabase/
 ## 9. 実装フェーズ
 - **Phase 1（済）**: 認証(園コード)・世帯/家族/子ども/クラス・イベント一覧/詳細・参加登録/人数/世帯一覧・お世話係のイベント作成/公開
 - **Phase 2（済）**: 写真（複数アップロード・自動圧縮WebP+サムネ・HEIC変換・Privateギャラリー・署名付きURL・拡大/スワイプ・単体&複数(zip)DL・権限別削除）
-- Phase 3: お世話係の高度機能（複製・ダッシュボード・参加状況管理）
-- Phase 4: 会計（準備買物・予算・立替精算・当日受付・当日会計）
+- **Phase 3（済）**: お世話係ダッシュボード・イベント複製・参加状況管理（世帯別参加者・人数内訳・連絡欄・参加者アレルギー一覧）
+- **Phase 4（済）**: 会計（準備・買い物＋予算、レシート画像＋立替精算、料金形式、当日受付＋ゲスト参加、当日会計＋金額変更＋集計）
 - Phase 5: アンケート・アレルギー集計・Tシャツ集計・ご意見管理
 - Phase 6: 役職履歴・歴代ページ・過去イベント実績
 - Phase 7: HEIC変換・Realtime・お知らせ・PWA検討

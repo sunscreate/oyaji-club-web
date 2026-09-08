@@ -20,7 +20,12 @@ import Allergy from './pages/mypage/Allergy'
 import StaffDashboard from './pages/staff/StaffDashboard'
 import StaffHome from './pages/staff/StaffHome'
 import StaffEventForm from './pages/staff/StaffEventForm'
+import StaffEventHub from './pages/staff/StaffEventHub'
 import StaffParticipants from './pages/staff/StaffParticipants'
+import StaffPrep from './pages/staff/StaffPrep'
+import StaffReceipts from './pages/staff/StaffReceipts'
+import StaffReception from './pages/staff/StaffReception'
+import StaffAccounting from './pages/staff/StaffAccounting'
 
 export default function App() {
   return (
@@ -50,10 +55,13 @@ export default function App() {
         <Route path="/staff" element={<StaffDashboard />} />
         <Route path="/staff/events" element={<StaffHome />} />
         <Route path="/staff/events/new" element={<StaffEventForm />} />
+        <Route path="/staff/events/:id" element={<StaffEventHub />} />
         <Route path="/staff/events/:id/edit" element={<StaffEventForm />} />
         <Route path="/staff/events/:id/participants" element={<StaffParticipants />} />
-        <Route path="/staff/prep" element={<Placeholder title="準備・買い物" note="フェーズ4で追加されます。" />} />
-        <Route path="/staff/accounting" element={<Placeholder title="会計" note="フェーズ4で追加されます。" />} />
+        <Route path="/staff/events/:id/prep" element={<StaffPrep />} />
+        <Route path="/staff/events/:id/receipts" element={<StaffReceipts />} />
+        <Route path="/staff/events/:id/reception" element={<StaffReception />} />
+        <Route path="/staff/events/:id/accounting" element={<StaffAccounting />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

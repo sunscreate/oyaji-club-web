@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useClasses, classLabel } from '../hooks/useClasses'
 import { formatDateJP } from '../lib/format'
+import { feeLabel, type FeeConfig } from '../lib/fee'
 import { Button, Card, ErrorText, Field, Input, Spinner, Textarea } from '../components/ui'
 import type { Child, ClassRow, EventRow, Profile } from '../types'
 
@@ -59,6 +60,8 @@ export default function EventDetail() {
       </div>
 
       {event.description && <Card><p className="whitespace-pre-wrap">{event.description}</p></Card>}
+
+      <InfoRow label="参加費" value={feeText(event.fee_type, event.fee_config as FeeConfig)} />
 
       <InfoRow label="持ち物" value={event.belongings} />
       <InfoRow label="雨天時" value={event.rain_info} />
@@ -129,6 +132,11 @@ export default function EventDetail() {
       )}
     </div>
   )
+}
+
+function feeText(feeType: string, cfg: FeeConfig): string | null {
+  const has = (cfg?.household ?? 0) > 0 || (cfg?.adult ?? 0) > 0 || (cfg?.child ?? 0) > 0
+  return has ? feeLabel(feeType, cfg) : null
 }
 
 function InfoRow({ label, value }: { label: string; value: string | null }) {
