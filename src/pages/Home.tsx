@@ -49,6 +49,7 @@ export default function Home() {
         <Tile to="/annual" icon="📅" label="年間予定" />
         <Tile to="/events" icon="🎪" label="イベント" />
         <Tile to="/photos" icon="📷" label="写真" />
+        <Tile to="/feedback" icon="✉️" label="ご意見・ご質問" />
         <Tile to="/about" icon="🦁" label="おやじ倶楽部について" />
       </section>
     </div>

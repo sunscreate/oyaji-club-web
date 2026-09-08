@@ -77,6 +77,16 @@ export default function EventDetail() {
         </Link>
       )}
 
+      {event.survey_enabled && (
+        <Link to={`/events/${event.id}/survey`}>
+          <Card className="flex items-center gap-3">
+            <span className="text-2xl">📝</span>
+            <span className="font-extrabold">アンケートに回答する</span>
+            <span className="ml-auto text-gray-400">›</span>
+          </Card>
+        </Link>
+      )}
+
       {event.attendance_enabled && (
         <Card>
           <h2 className="mb-1 text-sm font-bold text-gray-500">参加予定</h2>

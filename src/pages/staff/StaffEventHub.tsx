@@ -27,6 +27,7 @@ export default function StaffEventHub() {
     { to: `/staff/events/${id}/receipts`, icon: '🧾', label: '立替精算' },
     { to: `/staff/events/${id}/reception`, icon: '✅', label: '当日受付' },
     { to: `/staff/events/${id}/accounting`, icon: '💰', label: '当日会計' },
+    { to: `/staff/events/${id}/survey`, icon: '📝', label: 'アンケート' },
     { to: `/staff/events/${id}/edit`, icon: '✏️', label: 'イベント編集' },
   ]
 

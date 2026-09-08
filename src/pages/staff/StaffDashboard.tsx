@@ -8,6 +8,7 @@ import type { EventRow } from '../../types'
 export default function StaffDashboard() {
   const [next, setNext] = useState<EventRow | null>(null)
   const [stats, setStats] = useState<{ hh: number; people: number }>({ hh: 0, people: 0 })
+  const [unread, setUnread] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -35,6 +36,11 @@ export default function StaffDashboard() {
         }
         setStats({ hh: pIds.length, people })
       }
+      const { count: fbUnread } = await supabase
+        .from('feedback')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'unread')
+      setUnread(fbUnread ?? 0)
       setLoading(false)
     })()
   }, [])
@@ -68,6 +74,8 @@ export default function StaffDashboard() {
         <Tile to="/staff/events/new" icon="➕" label="イベント作成" />
         {next ? <Tile to={`/staff/events/${next.id}/prep`} icon="🛒" label="準備・買い物" /> : <Tile to="/staff/events" icon="🛒" label="準備・買い物" sub="イベントを選択" />}
         {next ? <Tile to={`/staff/events/${next.id}/accounting`} icon="💰" label="当日会計" /> : <Tile to="/staff/events" icon="💰" label="当日会計" sub="イベントを選択" />}
+        <Tile to="/staff/tshirt" icon="👕" label="Tシャツ集計" />
+        <Tile to="/staff/feedback" icon="✉️" label={`ご意見・ご質問${unread > 0 ? `（未確認${unread}）` : ''}`} />
       </section>
     </div>
   )

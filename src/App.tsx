@@ -8,9 +8,11 @@ import Home from './pages/Home'
 import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
 import EventPhotos from './pages/EventPhotos'
+import EventSurvey from './pages/EventSurvey'
 import PhotosIndex from './pages/PhotosIndex'
 import AnnualPlan from './pages/AnnualPlan'
 import About from './pages/About'
+import Feedback from './pages/Feedback'
 import Placeholder from './pages/Placeholder'
 import MyPage from './pages/mypage/MyPage'
 import MyProfile from './pages/mypage/MyProfile'
@@ -26,6 +28,10 @@ import StaffPrep from './pages/staff/StaffPrep'
 import StaffReceipts from './pages/staff/StaffReceipts'
 import StaffReception from './pages/staff/StaffReception'
 import StaffAccounting from './pages/staff/StaffAccounting'
+import StaffSurveyEditor from './pages/staff/StaffSurveyEditor'
+import StaffSurveyResults from './pages/staff/StaffSurveyResults'
+import StaffTshirt from './pages/staff/StaffTshirt'
+import StaffFeedback from './pages/staff/StaffFeedback'
 
 export default function App() {
   return (
@@ -39,11 +45,12 @@ export default function App() {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/photos" element={<EventPhotos />} />
+        <Route path="/events/:id/survey" element={<EventSurvey />} />
         <Route path="/annual" element={<AnnualPlan />} />
         <Route path="/about" element={<About />} />
         <Route path="/photos" element={<PhotosIndex />} />
         <Route path="/news" element={<Placeholder title="お知らせ" />} />
-        <Route path="/feedback" element={<Placeholder title="ご意見・ご質問" />} />
+        <Route path="/feedback" element={<Feedback />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/mypage/profile" element={<MyProfile />} />
         <Route path="/mypage/household" element={<Household />} />
@@ -62,6 +69,10 @@ export default function App() {
         <Route path="/staff/events/:id/receipts" element={<StaffReceipts />} />
         <Route path="/staff/events/:id/reception" element={<StaffReception />} />
         <Route path="/staff/events/:id/accounting" element={<StaffAccounting />} />
+        <Route path="/staff/events/:id/survey" element={<StaffSurveyEditor />} />
+        <Route path="/staff/events/:id/survey-results" element={<StaffSurveyResults />} />
+        <Route path="/staff/tshirt" element={<StaffTshirt />} />
+        <Route path="/staff/feedback" element={<StaffFeedback />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

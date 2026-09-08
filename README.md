@@ -33,6 +33,7 @@ npm run dev               # http://localhost:5173
    - `supabase/migrations/0001_init.sql`（テーブル・RLS・関数）
    - `supabase/migrations/0002_photos.sql`（写真テーブル・Privateバケット `event-photos`・Storageポリシー）
    - `supabase/migrations/0003_accounting.sql`（会計系テーブル・Privateバケット `receipts`・職員のみポリシー）
+   - `supabase/migrations/0004_surveys.sql`（アンケート・ご意見テーブル・ポリシー）
    - `supabase/seed.sql`（園コード・クラス・オーナー設定 ※後述）
 3. **Authentication > Providers > Email** を有効化。
    本番運用では **Confirm email = ON** を推奨（実在アドレスの確認）。
