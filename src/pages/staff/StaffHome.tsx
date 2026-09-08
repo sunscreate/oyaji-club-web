@@ -35,11 +35,10 @@ export default function StaffHome() {
 
   async function duplicate(e: EventRow) {
     setBusy(true)
-    const { data, error } = await supabase.from('events').insert({
+    const payload: Record<string, unknown> = {
       title: `${e.title}（コピー）`,
       event_date: e.event_date,
       start_time: e.start_time,
-      end_time: e.end_time,
       place: e.place,
       description: e.description,
       target: e.target,
@@ -54,7 +53,9 @@ export default function StaffHome() {
       is_annual: e.is_annual,
       status: 'draft',
       created_by: profile?.id ?? null,
-    }).select('id').single()
+    }
+    if (e.end_time) payload.end_time = e.end_time
+    const { data, error } = await supabase.from('events').insert(payload).select('id').single()
     setBusy(false)
     if (!error && data) nav(`/staff/events/${(data as { id: string }).id}/edit`)
   }

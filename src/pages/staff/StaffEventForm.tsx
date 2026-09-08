@@ -107,13 +107,22 @@ export default function StaffEventForm() {
         created_by: profile?.id ?? null,
       }
       let eventId = id as string | undefined
-      if (editing) {
-        const { error } = await supabase.from('events').update(payload).eq('id', id)
+      const savePayload = async (p: typeof payload) => {
+        if (editing) {
+          const { error } = await supabase.from('events').update(p).eq('id', id)
+          if (error) throw error
+          return eventId
+        }
+        const { data, error } = await supabase.from('events').insert(p).select('id').single()
         if (error) throw error
-      } else {
-        const { data, error } = await supabase.from('events').insert(payload).select('id').single()
-        if (error) throw error
-        eventId = (data as { id: string }).id
+        return (data as { id: string }).id
+      }
+      try {
+        eventId = await savePayload(payload)
+      } catch (e) {
+        if (!(e instanceof Error) || !e.message.includes('end_time')) throw e
+        const { end_time: _endTime, ...legacyPayload } = payload
+        eventId = await savePayload(legacyPayload as typeof payload)
       }
       // 告知メディアのアップロード
       const media = await uploadMedia(eventId!)
