@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f7f7f7;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* iOS のセーフエリア（下部固定ナビ用） */
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
+}
+.nav-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
