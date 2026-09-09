@@ -144,26 +144,23 @@ function SortableClassRow({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className={isDragging ? 'opacity-60 shadow-lg' : ''}>
+      <Card className={`p-3 ${isDragging ? 'opacity-60 shadow-lg' : ''}`}>
         {editing ? children : (
-          <div className="flex items-stretch gap-3">
+          <div className="flex items-stretch gap-2">
             <button
               type="button"
-              className="flex w-16 shrink-0 touch-none flex-col items-center justify-center gap-2 rounded-xl bg-gray-50 px-2 py-4 text-gray-500 active:bg-gray-100"
+              className="flex w-12 shrink-0 touch-none items-center justify-center rounded-lg bg-gray-50 px-2 py-2 text-gray-500 active:bg-gray-100"
               aria-label={`${row.grade} ${row.name}を並び替え`}
               {...attributes}
               {...listeners}
             >
-              <span className="text-3xl font-extrabold leading-none">≡</span>
+              <span className="text-2xl font-extrabold leading-none">≡</span>
             </button>
-            <div className="min-w-0 flex-1 space-y-3">
-              <div>
-                <p className="text-lg font-extrabold">{row.year}年度 {row.grade} {row.name}</p>
-                <p className="text-xs text-gray-500">左のつまみを長押し</p>
-              </div>
+            <div className="min-w-0 flex-1 space-y-2">
+              <p className="truncate text-base font-extrabold">{row.year}年度 {row.grade} {row.name}</p>
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={onEdit} className="rounded-lg bg-red-50 py-2 text-sm font-bold text-brand-red">編集</button>
-                <button type="button" onClick={onRemove} className="rounded-lg bg-gray-100 py-2 text-sm font-bold text-gray-500">削除</button>
+                <button type="button" onClick={onEdit} className="rounded-lg bg-red-50 py-1.5 text-sm font-bold text-brand-red">編集</button>
+                <button type="button" onClick={onRemove} className="rounded-lg bg-gray-100 py-1.5 text-sm font-bold text-gray-500">削除</button>
               </div>
             </div>
           </div>
