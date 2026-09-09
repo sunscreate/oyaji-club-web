@@ -62,10 +62,10 @@ export default function MyProfile() {
           <div className="rounded-xl bg-gray-50 p-3">
             <button type="button" onClick={() => setOyaji(!oyaji)} className="flex w-full items-center gap-3">
               <span className={`flex h-6 w-6 items-center justify-center rounded-md border-2 ${oyaji ? 'border-brand-red bg-brand-red text-white' : 'border-gray-300'}`}>{oyaji ? '✓' : ''}</span>
-              <span className="font-bold">🦁 おやじ倶楽部に参加する</span>
+              <span className="font-bold">🦁 おやじ倶楽部に入会する</span>
             </button>
             <p className="mt-2 text-sm leading-relaxed text-gray-600">
-              おやじ倶楽部への参加はパパのみです。参加しなくても、イベント参加やサイトの利用はできます。
+              おやじ倶楽部への入会はパパのみです。入会しなくても、イベント参加やサイトの利用はできます。
             </p>
             {oyaji && (
               <div className="mt-3">
