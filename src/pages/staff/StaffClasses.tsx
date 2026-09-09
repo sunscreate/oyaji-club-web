@@ -81,23 +81,6 @@ export default function StaffClasses() {
     }
   }
 
-  async function moveByButton(rowId: string, dir: -1 | 1) {
-    setErr('')
-    const from = rows.findIndex((r) => r.id === rowId)
-    const to = from + dir
-    if (from < 0 || to < 0 || to >= rows.length) return
-    const next = arrayMove(rows, from, to)
-    setRows(next)
-    const results = await Promise.all(next.map((row, index) =>
-      supabase.from('classes').update({ sort_order: (index + 1) * 10 }).eq('id', row.id),
-    ))
-    const failed = results.find((r) => r.error)
-    if (failed?.error) {
-      setErr(`並び替えに失敗しました: ${failed.error.message}`)
-      await load()
-    }
-  }
-
   if (loading) return <Spinner />
 
   return (
@@ -128,13 +111,9 @@ export default function StaffClasses() {
                 <SortableClassRow
                   key={row.id}
                   row={row}
-                  first={rows[0]?.id === row.id}
-                  last={rows[rows.length - 1]?.id === row.id}
                   editing={editing?.id === row.id}
                   onEdit={() => setEditing(row)}
                   onRemove={() => remove(row)}
-                  onMoveUp={() => moveByButton(row.id, -1)}
-                  onMoveDown={() => moveByButton(row.id, 1)}
                 >
                   <ClassForm
                     initial={row}
@@ -152,16 +131,12 @@ export default function StaffClasses() {
 }
 
 function SortableClassRow({
-  row, first, last, editing, onEdit, onRemove, onMoveUp, onMoveDown, children,
+  row, editing, onEdit, onRemove, children,
 }: {
   row: ClassRow
-  first: boolean
-  last: boolean
   editing: boolean
   onEdit: () => void
   onRemove: () => void
-  onMoveUp: () => void
-  onMoveDown: () => void
   children: React.ReactNode
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id })
@@ -187,9 +162,7 @@ function SortableClassRow({
                 <p className="text-lg font-extrabold">{row.year}年度 {row.grade} {row.name}</p>
                 <p className="text-xs text-gray-500">左のつまみを長押ししてドラッグ</p>
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                <button type="button" onClick={onMoveUp} disabled={first} className="rounded-lg border border-gray-300 bg-white py-2 text-sm font-bold text-gray-700 disabled:opacity-30">上へ</button>
-                <button type="button" onClick={onMoveDown} disabled={last} className="rounded-lg border border-gray-300 bg-white py-2 text-sm font-bold text-gray-700 disabled:opacity-30">下へ</button>
+              <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={onEdit} className="rounded-lg bg-red-50 py-2 text-sm font-bold text-brand-red">編集</button>
                 <button type="button" onClick={onRemove} className="rounded-lg bg-gray-100 py-2 text-sm font-bold text-gray-500">削除</button>
               </div>
