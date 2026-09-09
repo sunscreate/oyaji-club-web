@@ -45,7 +45,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/guide" replace />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<Guide />} />
+      <Route path="/signin" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/register" element={<RegisterProfile />} />
       <Route path="/guide" element={<Guide />} />

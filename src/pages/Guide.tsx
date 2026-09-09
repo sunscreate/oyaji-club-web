@@ -61,7 +61,7 @@ export default function Guide() {
           </Link>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            <Link to="/login"><Button className="py-3 text-base">ログインへ</Button></Link>
+            <Link to="/signin"><Button className="py-3 text-base">ログインへ</Button></Link>
             <Link to="/signup"><Button variant="secondary" className="py-3 text-base">新規登録へ</Button></Link>
           </div>
         )}
@@ -93,7 +93,7 @@ export default function Guide() {
         {session ? (
           <Link to={homePath} className="font-bold text-brand-red underline">ホームへ進む</Link>
         ) : (
-          <Link to="/login" className="font-bold text-brand-red underline">ログイン画面へ進む</Link>
+          <Link to="/signin" className="font-bold text-brand-red underline">ログイン画面へ進む</Link>
         )}
       </p>
     </div>

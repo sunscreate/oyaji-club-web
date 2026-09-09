@@ -78,7 +78,7 @@ export default function Signup() {
           <p className="text-gray-700">{doneName} さんとして登録されました。このまま利用を始めるか、ログイン画面に戻れます。</p>
           <div className="mt-6 space-y-3">
             <Button onClick={async () => { await refresh(); nav('/home', { replace: true }) }}>このまま始める（ホームへ）</Button>
-            <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); nav('/login') }}>ログイン画面へ戻る</Button>
+            <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); nav('/signin') }}>ログイン画面へ戻る</Button>
           </div>
         </Card>
       </PlainLayout>
@@ -94,7 +94,7 @@ export default function Signup() {
             現在のSupabase設定でメール確認が必要になっています。メールなし登録にするには、Supabaseのメール確認をOFFにしてください。
           </p>
           <div className="mt-6">
-            <Link to="/login"><Button variant="secondary">ログイン画面へ</Button></Link>
+            <Link to="/signin"><Button variant="secondary">ログイン画面へ</Button></Link>
           </div>
         </Card>
       </PlainLayout>
@@ -131,7 +131,7 @@ export default function Signup() {
           </button>
           <p className="mt-6 text-center text-gray-600">
             登録済みの方は{' '}
-            <Link to="/login" className="font-bold text-brand-red underline">ログイン</Link>
+            <Link to="/signin" className="font-bold text-brand-red underline">ログイン</Link>
           </p>
         </div>
       )}
@@ -199,7 +199,7 @@ export default function Signup() {
       {mode && (
         <p className="mt-6 text-center text-gray-600">
           登録済みの方は{' '}
-          <Link to="/login" className="font-bold text-brand-red underline">ログイン</Link>
+          <Link to="/signin" className="font-bold text-brand-red underline">ログイン</Link>
         </p>
       )}
       {mode && (
