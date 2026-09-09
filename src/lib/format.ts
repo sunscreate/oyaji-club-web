@@ -20,8 +20,15 @@ export function isPast(iso: string): boolean {
 }
 
 export function formatTimeRange(start?: string | null, end?: string | null): string {
-  if (start && end) return `${start}〜${end}`
-  if (start) return start
-  if (end) return `終了 ${end}`
+  const s = formatTime(start)
+  const e = formatTime(end)
+  if (s && e) return `${s}〜${e}`
+  if (s) return s
+  if (e) return `終了 ${e}`
   return ''
+}
+
+function formatTime(value?: string | null): string {
+  if (!value) return ''
+  return value.slice(0, 5)
 }
