@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import {
   DndContext,
   KeyboardSensor,
+  MouseSensor,
   PointerSensor,
+  TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -30,7 +32,9 @@ export default function StaffClasses() {
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
@@ -77,6 +81,23 @@ export default function StaffClasses() {
     }
   }
 
+  async function moveByButton(rowId: string, dir: -1 | 1) {
+    setErr('')
+    const from = rows.findIndex((r) => r.id === rowId)
+    const to = from + dir
+    if (from < 0 || to < 0 || to >= rows.length) return
+    const next = arrayMove(rows, from, to)
+    setRows(next)
+    const results = await Promise.all(next.map((row, index) =>
+      supabase.from('classes').update({ sort_order: (index + 1) * 10 }).eq('id', row.id),
+    ))
+    const failed = results.find((r) => r.error)
+    if (failed?.error) {
+      setErr(`並び替えに失敗しました: ${failed.error.message}`)
+      await load()
+    }
+  }
+
   if (loading) return <Spinner />
 
   return (
@@ -107,9 +128,13 @@ export default function StaffClasses() {
                 <SortableClassRow
                   key={row.id}
                   row={row}
+                  first={rows[0]?.id === row.id}
+                  last={rows[rows.length - 1]?.id === row.id}
                   editing={editing?.id === row.id}
                   onEdit={() => setEditing(row)}
                   onRemove={() => remove(row)}
+                  onMoveUp={() => moveByButton(row.id, -1)}
+                  onMoveDown={() => moveByButton(row.id, 1)}
                 >
                   <ClassForm
                     initial={row}
@@ -127,12 +152,16 @@ export default function StaffClasses() {
 }
 
 function SortableClassRow({
-  row, editing, onEdit, onRemove, children,
+  row, first, last, editing, onEdit, onRemove, onMoveUp, onMoveDown, children,
 }: {
   row: ClassRow
+  first: boolean
+  last: boolean
   editing: boolean
   onEdit: () => void
   onRemove: () => void
+  onMoveUp: () => void
+  onMoveDown: () => void
   children: React.ReactNode
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id })
@@ -142,22 +171,26 @@ function SortableClassRow({
     <div ref={setNodeRef} style={style}>
       <Card className={isDragging ? 'opacity-60 shadow-lg' : ''}>
         {editing ? children : (
-          <div className="flex items-center gap-3">
+          <div className="space-y-3">
             <button
               type="button"
-              className="touch-none rounded-lg bg-gray-100 px-3 py-2 text-lg font-extrabold text-gray-500"
+              className="flex w-full touch-none items-center gap-3 rounded-xl bg-gray-50 px-3 py-3 text-left active:bg-gray-100"
               aria-label={`${row.grade} ${row.name}を並び替え`}
               {...attributes}
               {...listeners}
             >
-              ≡
+              <span className="rounded-lg bg-white px-3 py-2 text-lg font-extrabold text-gray-500 shadow-sm">≡</span>
+              <span className="flex-1">
+                <span className="block text-lg font-extrabold">{row.year}年度 {row.grade} {row.name}</span>
+                <span className="block text-xs text-gray-500">ここを長押ししてドラッグ</span>
+              </span>
             </button>
-            <div className="flex-1">
-              <p className="text-lg font-extrabold">{row.year}年度 {row.grade} {row.name}</p>
-              <p className="text-xs text-gray-500">ドラッグで順番を入れ替え</p>
+            <div className="grid grid-cols-4 gap-2">
+              <button type="button" onClick={onMoveUp} disabled={first} className="rounded-lg border border-gray-300 bg-white py-2 text-sm font-bold text-gray-700 disabled:opacity-30">上へ</button>
+              <button type="button" onClick={onMoveDown} disabled={last} className="rounded-lg border border-gray-300 bg-white py-2 text-sm font-bold text-gray-700 disabled:opacity-30">下へ</button>
+              <button type="button" onClick={onEdit} className="rounded-lg bg-red-50 py-2 text-sm font-bold text-brand-red">編集</button>
+              <button type="button" onClick={onRemove} className="rounded-lg bg-gray-100 py-2 text-sm font-bold text-gray-500">削除</button>
             </div>
-            <button onClick={onEdit} className="text-sm font-bold text-brand-red">編集</button>
-            <button onClick={onRemove} className="text-sm text-gray-400">削除</button>
           </div>
         )}
       </Card>
