@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { formatDateJP } from '../../lib/format'
-import { Button, Card, EmptyState, PageTitle, Spinner } from '../../components/ui'
+import { Button, Card, EmptyState, ErrorText, PageTitle, Spinner } from '../../components/ui'
 import type { EventRow } from '../../types'
 
 const STATUS_LABEL: Record<string, string> = { draft: '下書き', published: '公開中', finished: '終了' }
@@ -14,11 +14,15 @@ const STATUS_CLS: Record<string, string> = {
 }
 
 export default function StaffHome() {
-  const { profile } = useAuth()
+  const { profile, isOwner, isPresident } = useAuth()
+  const canDelete = isOwner || isPresident
   const nav = useNavigate()
   const [events, setEvents] = useState<EventRow[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [err, setErr] = useState('')
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('events').select('*').order('event_date', { ascending: false })
@@ -60,6 +64,37 @@ export default function StaffHome() {
     if (!error && data) nav(`/staff/events/${(data as { id: string }).id}/edit`)
   }
 
+  async function removeEvent(e: EventRow) {
+    if (!canDelete) {
+      setErr('イベント削除は会長・オーナーのみ可能です。')
+      return
+    }
+    setDeletingId(e.id)
+    setErr('')
+    try {
+      const [{ data: photos }, { data: receipts }] = await Promise.all([
+        supabase.from('photos').select('storage_path,thumb_path').eq('event_id', e.id),
+        supabase.from('receipts').select('image_path').eq('event_id', e.id),
+      ])
+      const mediaPaths = [e.image_path, e.flyer_path].filter(Boolean) as string[]
+      if (mediaPaths.length > 0) await supabase.storage.from('event-media').remove([...new Set(mediaPaths)])
+      const photoPaths = ((photos ?? []) as { storage_path: string; thumb_path: string }[]).flatMap((p) => [p.storage_path, p.thumb_path])
+      if (photoPaths.length > 0) await supabase.storage.from('event-photos').remove(photoPaths)
+      const receiptPaths = ((receipts ?? []) as { image_path: string | null }[]).map((r) => r.image_path).filter(Boolean) as string[]
+      if (receiptPaths.length > 0) await supabase.storage.from('receipts').remove(receiptPaths)
+
+      const { data, error } = await supabase.from('events').delete().eq('id', e.id).select('id').maybeSingle()
+      if (error || !data) throw error ?? new Error('イベントが見つからないか、削除権限がありません。')
+      setConfirmDeleteId(null)
+      await load()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '削除に失敗しました。'
+      setErr(message.includes('permission') || message.includes('forbidden') ? 'イベント削除は会長・オーナーのみ可能です。' : `削除に失敗しました: ${message}`)
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -68,6 +103,7 @@ export default function StaffHome() {
       </div>
 
       <Link to="/staff/events/new"><Button variant="secondary">＋ イベントを作成</Button></Link>
+      <ErrorText>{err}</ErrorText>
 
       {loading ? <Spinner /> : events.length === 0 ? (
         <EmptyState>まだイベントがありません。「＋ イベントを作成」から追加してください。</EmptyState>
@@ -94,11 +130,24 @@ export default function StaffHome() {
                 {e.status !== 'finished' && (
                   <button onClick={() => setStatus(e, 'finished')} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">終了</button>
                 )}
+                {canDelete && (
+                  confirmDeleteId === e.id ? (
+                    <>
+                      <button onClick={() => removeEvent(e)} disabled={deletingId === e.id} className="rounded-xl bg-brand-red px-4 py-2 text-sm font-bold text-white">
+                        {deletingId === e.id ? '削除中…' : '本当に削除'}
+                      </button>
+                      <button onClick={() => setConfirmDeleteId(null)} disabled={deletingId === e.id} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold">やめる</button>
+                    </>
+                  ) : (
+                    <button onClick={() => setConfirmDeleteId(e.id)} className="rounded-xl border border-brand-red bg-white px-4 py-2 text-sm font-bold text-brand-red">削除</button>
+                  )
+                )}
               </div>
             </Card>
           ))}
         </div>
       )}
+      {!canDelete && <p className="text-xs text-gray-400">※ イベント削除は会長・オーナーのみ可能です。</p>}
     </div>
   )
 }
