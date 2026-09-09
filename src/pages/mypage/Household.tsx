@@ -12,7 +12,7 @@ export default function Household() {
   const [invite, setInvite] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [copyMode, setCopyMode] = useState<'code' | 'message'>('message')
 
   useEffect(() => {
@@ -41,7 +41,23 @@ export default function Household() {
     const { data } = await supabase.rpc('rotate_invite_code')
     setInvite((data as string) ?? '')
     setBusy(false)
-    setCopied(false)
+    setCopyStatus('idle')
+  }
+
+  function copyWithFallback(text: string) {
+    const area = document.createElement('textarea')
+    area.value = text
+    area.setAttribute('readonly', '')
+    area.style.position = 'fixed'
+    area.style.top = '0'
+    area.style.left = '0'
+    area.style.opacity = '0'
+    document.body.appendChild(area)
+    area.focus()
+    area.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(area)
+    return ok
   }
 
   async function copy() {
@@ -50,10 +66,22 @@ export default function Household() {
       ? `さぎぬま幼稚園 おやじ倶楽部サイトの家族招待です。\n\n登録はこちら：${signupUrl}\n家族招待コード：${invite}\n\n新規登録画面で「家族の世帯に参加」を選び、このコードを入力してください。`
       : invite
     try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    } catch { /* noop */ }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+      } else if (!copyWithFallback(text)) {
+        throw new Error('copy failed')
+      }
+      setCopyStatus('copied')
+      setTimeout(() => setCopyStatus('idle'), 1800)
+    } catch {
+      try {
+        if (!copyWithFallback(text)) throw new Error('copy failed')
+        setCopyStatus('copied')
+        setTimeout(() => setCopyStatus('idle'), 1800)
+      } catch {
+        setCopyStatus('failed')
+      }
+    }
   }
 
   if (loading) return <Spinner />
@@ -104,7 +132,11 @@ export default function Household() {
                 コードだけ
               </button>
             </div>
-            <button onClick={copy} className="w-full rounded-xl bg-brand-yellow px-4 py-3 font-bold">{copied ? 'コピー済' : 'コピーする'}</button>
+            <button type="button" onClick={copy} className="w-full rounded-xl bg-brand-yellow px-4 py-3 font-bold">
+              {copyStatus === 'copied' ? 'コピー済' : 'コピーする'}
+            </button>
+            {copyStatus === 'copied' && <p className="text-center text-sm font-bold text-green-600">コピーしました</p>}
+            {copyStatus === 'failed' && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-brand-red">コピーできませんでした。コードを長押ししてコピーしてください。</p>}
           </div>
         ) : (
           <p className="mb-3 text-gray-500">まだ招待コードがありません。</p>
