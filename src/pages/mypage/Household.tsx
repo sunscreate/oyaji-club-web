@@ -60,21 +60,36 @@ export default function Household() {
     return true
   }
 
+  function copyWithFallback(text: string) {
+    const area = document.createElement('textarea')
+    area.value = text
+    area.setAttribute('readonly', '')
+    area.style.position = 'fixed'
+    area.style.top = '-1000px'
+    area.style.left = '-1000px'
+    area.style.opacity = '0'
+    document.body.appendChild(area)
+    area.focus()
+    area.select()
+    area.setSelectionRange(0, area.value.length)
+    const ok = document.execCommand('copy')
+    document.body.removeChild(area)
+    return ok
+  }
+
   async function copy() {
     setCopyStatus('idle')
-    selectCopyText()
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(copyText)
-      } else if (!document.execCommand('copy')) {
+      } else if (!copyWithFallback(copyText)) {
         throw new Error('copy failed')
       }
       setCopyStatus('copied')
       setTimeout(() => setCopyStatus('idle'), 1800)
     } catch {
       try {
-        selectCopyText()
-        if (!document.execCommand('copy')) throw new Error('copy failed')
+        if (!copyWithFallback(copyText)) throw new Error('copy failed')
         setCopyStatus('copied')
         setTimeout(() => setCopyStatus('idle'), 1800)
       } catch {
