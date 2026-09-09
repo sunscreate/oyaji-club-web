@@ -66,7 +66,7 @@ npm run dev               # http://localhost:5173
 
 1. **園コード**（新規登録に必須の共有コード）:
    ```sql
-   update app_config set signup_code = 'SAGINUMA2026' where id = 1;
+   update app_config set signup_code = 'saginuma-2026' where id = 1;
    ```
    このコードを LINE 等で保護者に配布する。変更すれば以後の新規登録を止められる。
 2. **クラス登録**: 初期投入は `insert into classes ...` を実際の組名に合わせて編集。運用開始後はサイト内の「お世話係 > クラス管理」から追加・修正できる。

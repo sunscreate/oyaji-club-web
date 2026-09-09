@@ -119,7 +119,7 @@ export default function Signup() {
                   <Input value={householdName} onChange={(e) => setHouseholdName(e.target.value)} placeholder="山田家" />
                 </Field>
                 <Field label="園コード（園から配布されたコード）">
-                  <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="SAGINUMA2026" required />
+                  <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="saginuma-2026" required />
                 </Field>
               </div>
             ) : (

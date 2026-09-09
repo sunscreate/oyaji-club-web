@@ -3,7 +3,7 @@
 -- =====================================================================
 
 -- 1) 園コードを設定（保護者に配布する共有コード。任意の文字列に変更する）
-update app_config set signup_code = 'SAGINUMA2026' where id = 1;
+update app_config set signup_code = 'saginuma-2026' where id = 1;
 
 -- 2) 今年度のクラスを登録（例。実際の組名に合わせて編集する）
 insert into classes (year, grade, name, sort_order) values
