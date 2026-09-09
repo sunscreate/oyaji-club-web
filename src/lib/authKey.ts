@@ -1,17 +1,23 @@
 const INTERNAL_AUTH_DOMAIN = 'oyaji-club.example.com'
 
-export function normalizeLoginKey(value: string) {
-  return value.trim().toLowerCase()
+export function normalizeAuthName(value: string) {
+  return value.trim().replace(/[\s\u3000]+/g, '')
 }
 
-export function loginKeyToEmail(value: string) {
-  return `${normalizeLoginKey(value)}@${INTERNAL_AUTH_DOMAIN}`
+async function sha256Hex(value: string) {
+  const bytes = new TextEncoder().encode(value)
+  const hash = await crypto.subtle.digest('SHA-256', bytes)
+  return Array.from(new Uint8Array(hash), (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-export function validateLoginKey(value: string) {
-  const key = normalizeLoginKey(value)
-  if (!/^[a-z0-9][a-z0-9._-]{2,31}$/.test(key)) {
-    return 'ログインキーは3〜32文字の半角英数字・記号（.-_）で入力してください。'
+export async function personNameToEmail(value: string) {
+  const hash = await sha256Hex(normalizeAuthName(value))
+  return `name-${hash.slice(0, 48)}@${INTERNAL_AUTH_DOMAIN}`
+}
+
+export function validateAuthName(value: string) {
+  if (!normalizeAuthName(value)) {
+    return '氏名を入力してください。'
   }
   return ''
 }

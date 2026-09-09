@@ -17,7 +17,7 @@ on conflict do nothing;
 
 -- 3) サイトオーナーの設定
 --    先に本人がサイトから「新規登録（園コード入力）」を済ませてから、
---    下記の <YOUR_EMAIL> を自分のメールに変えて実行する。
+--    手動付与が必要な場合だけ、下記の <YOUR_EMAIL> を Supabase Auth の内部メールに変えて実行する。
 --    以後オーナー権限は永久保持（会長職とは独立）。
 insert into roles (profile_id, role, year, start_date)
 select p.id, 'site_owner', 2026, current_date
