@@ -60,8 +60,6 @@ export default function Home() {
         <Tile to="/events" icon="🎪" label="イベント" />
         <Tile to="/news" icon="📢" label="お知らせ" />
         <Tile to="/photos" icon="📷" label="写真" />
-        <Tile to="/past" icon="🗂" label="過去イベント" />
-        <Tile to="/roles" icon="👑" label="歴代役職" />
         <Tile to="/feedback" icon="✉️" label="ご意見・ご質問" />
         <Tile to="/about" icon="🦁" label="おやじ倶楽部について" />
       </section>
