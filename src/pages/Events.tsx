@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatDateJP, formatTimeRange, isPast } from '../lib/format'
+import { fiscalYear, formatDateJP, formatTimeRange, isPast } from '../lib/format'
 import { Card, EmptyState, PageTitle, Spinner } from '../components/ui'
 import type { EventRow } from '../types'
 
@@ -62,7 +62,10 @@ function Row({ e, past }: { e: EventRow; past?: boolean }) {
   return (
     <Link to={`/events/${e.id}`}>
       <Card className={past ? 'opacity-80' : ''}>
-        <p className="text-sm font-bold text-brand-red">{formatDateJP(e.event_date)}{formatTimeRange(e.start_time, e.end_time) ? ` ${formatTimeRange(e.start_time, e.end_time)}` : ''}</p>
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-extrabold text-brand-red">{fiscalYear(e.event_date)}年度イベント</span>
+          <span className="text-sm font-bold text-brand-red">{formatDateJP(e.event_date)}{formatTimeRange(e.start_time, e.end_time) ? ` ${formatTimeRange(e.start_time, e.end_time)}` : ''}</span>
+        </div>
         <h3 className="text-xl font-extrabold">{e.title}</h3>
         {e.place && <p className="text-gray-600">📍 {e.place}</p>}
       </Card>

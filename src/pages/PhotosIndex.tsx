@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatDateJP } from '../lib/format'
+import { fiscalYear, formatDateJP } from '../lib/format'
 import { Card, EmptyState, PageTitle, Spinner } from '../components/ui'
 import type { EventRow } from '../types'
 
@@ -27,24 +27,41 @@ export default function PhotosIndex() {
 
   if (loading) return <Spinner />
 
+  const byYear = new Map<number, { event: EventRow; count: number }[]>()
+  for (const row of rows) {
+    const year = fiscalYear(row.event.event_date)
+    byYear.set(year, [...(byYear.get(year) ?? []), row])
+  }
+  const years = [...byYear.keys()].sort((a, b) => b - a)
+
   return (
     <div>
       <PageTitle>写真</PageTitle>
       {rows.length === 0 ? (
         <EmptyState>まだ写真が投稿されたイベントはありません。</EmptyState>
       ) : (
-        <div className="space-y-3">
-          {rows.map(({ event, count }) => (
-            <Link key={event.id} to={`/events/${event.id}/photos`}>
-              <Card className="flex items-center gap-3">
-                <span className="text-2xl">📷</span>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-brand-red">{formatDateJP(event.event_date)}</p>
-                  <p className="font-extrabold">{event.title}</p>
-                </div>
-                <span className="text-sm font-bold text-gray-500">{count}枚</span>
-              </Card>
-            </Link>
+        <div className="space-y-5">
+          {years.map((year) => (
+            <section key={year}>
+              <h2 className="mb-2 text-sm font-bold text-gray-500">{year}年度のイベント写真</h2>
+              <div className="space-y-3">
+                {byYear.get(year)!.map(({ event, count }) => (
+                  <Link key={event.id} to={`/events/${event.id}/photos`}>
+                    <Card className="flex items-center gap-3">
+                      <span className="text-2xl">📷</span>
+                      <div className="flex-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-extrabold text-brand-red">{year}年度イベント</span>
+                          <span className="text-sm font-bold text-brand-red">{formatDateJP(event.event_date)}</span>
+                        </div>
+                        <p className="font-extrabold">{event.title}</p>
+                      </div>
+                      <span className="text-sm font-bold text-gray-500">{count}枚</span>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}
