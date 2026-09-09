@@ -118,10 +118,10 @@ export default function Home() {
             <Link to="/feedback?view=qa" className="block">
               <div className="rounded-2xl border-2 border-brand-yellow bg-yellow-50 p-4 shadow-sm active:scale-[0.99]">
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="rounded-full bg-brand-yellow px-3 py-1 text-xs font-extrabold text-black">質問回答</span>
+                  <span className="rounded-full bg-brand-yellow px-3 py-1 text-xs font-extrabold text-black">公開QA</span>
                   <span className="text-xs font-bold text-gray-500">{feedbackNotice.newFaqs}件</span>
                 </div>
-                <p className="text-lg font-extrabold text-black">新しい質問回答が公開されました</p>
+                <p className="text-lg font-extrabold text-black">新しい公開QAがあります</p>
                 <p className="mt-1 text-sm text-gray-700">みんなに共有された回答を確認できます。</p>
               </div>
             </Link>

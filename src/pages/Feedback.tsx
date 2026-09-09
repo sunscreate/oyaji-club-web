@@ -162,7 +162,7 @@ export default function Feedback() {
       <div className="mb-4 grid grid-cols-3 gap-2">
         <Tab active={view === 'new'} onClick={() => setView('new')}>投稿する</Tab>
         <Tab active={view === 'mine'} onClick={() => setView('mine')}>やりとり</Tab>
-        <Tab active={view === 'qa'} onClick={() => setView('qa')}>質問回答</Tab>
+        <Tab active={view === 'qa'} onClick={() => setView('qa')}>公開QA</Tab>
       </div>
       <ErrorText>{err}</ErrorText>
 
@@ -228,9 +228,9 @@ export default function Feedback() {
 
       {view === 'qa' && (
         <section>
-          <h2 className="mb-2 text-sm font-bold text-gray-500">みんなの質問・回答</h2>
+          <h2 className="mb-2 text-sm font-bold text-gray-500">公開QA</h2>
           {qa.length === 0 ? (
-            <EmptyState>公開中の質問回答はまだありません。</EmptyState>
+            <EmptyState>公開中のQAはまだありません。</EmptyState>
           ) : (
             <div className="space-y-3">
               {qa.map((q) => (

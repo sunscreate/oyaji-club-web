@@ -144,7 +144,7 @@ export default function StaffFeedback() {
         <PageTitle>ご意見・ご質問</PageTitle>
         {unread > 0 && <span className="rounded-full bg-brand-red px-3 py-1 text-sm font-bold text-white">未確認 {unread}件</span>}
       </div>
-      <p className="text-sm text-gray-500">個別に何度でも返信できます。よくある質問は「返信してFAQ公開」で、みんなの質問回答に掲載されます。</p>
+      <p className="text-sm text-gray-500">個別に何度でも返信できます。よくある質問は「返信してFAQ公開」で、公開QAに掲載されます。</p>
       <ErrorText>{err}</ErrorText>
 
       {rows.length === 0 ? (
