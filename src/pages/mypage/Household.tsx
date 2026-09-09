@@ -2,13 +2,16 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { useClasses, classLabel } from '../../hooks/useClasses'
 import { Button, Card, Field, Input, PageTitle, Spinner } from '../../components/ui'
-import type { Profile } from '../../types'
+import type { Child, Profile } from '../../types'
 
 export default function Household() {
   const { profile } = useAuth()
+  const { classes } = useClasses()
   const [name, setName] = useState('')
   const [members, setMembers] = useState<Profile[]>([])
+  const [children, setChildren] = useState<Child[]>([])
   const [invite, setInvite] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -25,13 +28,15 @@ export default function Household() {
   useEffect(() => {
     ;(async () => {
       if (!profile?.household_id) { setLoading(false); return }
-      const [{ data: hh }, { data: ms }, { data: code }] = await Promise.all([
+      const [{ data: hh }, { data: ms }, { data: cs }, { data: code }] = await Promise.all([
         supabase.from('households').select('name').eq('id', profile.household_id).maybeSingle(),
-        supabase.from('profiles').select('id,full_name,household_id,member_type,oyaji_member,tshirt_size').eq('household_id', profile.household_id),
+        supabase.from('profiles').select('id,full_name,household_id,member_type,oyaji_member,tshirt_size,tshirt_delivered').eq('household_id', profile.household_id),
+        supabase.from('children').select('*').eq('household_id', profile.household_id).order('created_at'),
         supabase.rpc('get_my_invite_code'),
       ])
       setName((hh as { name: string } | null)?.name ?? '')
       setMembers((ms ?? []) as Profile[])
+      setChildren((cs ?? []) as Child[])
       setInvite((code as string) ?? '')
       setLoading(false)
     })()
@@ -135,15 +140,41 @@ export default function Household() {
       </Card>
 
       <Card>
-        <h2 className="mb-2 text-sm font-bold text-gray-500">この世帯のメンバー</h2>
-        <ul className="space-y-1">
-          {members.map((m) => (
-            <li key={m.id} className="flex items-center gap-2">
-              <span className="font-bold">{m.full_name}</span>
-              {m.id === profile?.id && <span className="text-xs text-gray-400">（あなた）</span>}
-            </li>
-          ))}
-        </ul>
+        <h2 className="mb-3 text-sm font-bold text-gray-500">この世帯のメンバー</h2>
+        <div className="space-y-4">
+          <div>
+            <p className="mb-1 text-xs font-bold text-gray-400">保護者</p>
+            <ul className="space-y-1">
+              {members.map((m) => (
+                <li key={m.id} className="flex items-center gap-2">
+                  <span className="font-bold">{m.full_name}</span>
+                  {m.id === profile?.id && <span className="text-xs text-gray-400">（あなた）</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="mb-1 text-xs font-bold text-gray-400">子ども</p>
+            {children.length === 0 ? (
+              <p className="text-sm text-gray-500">まだ子どもが登録されていません。</p>
+            ) : (
+              <ul className="space-y-1">
+                {children.map((c) => {
+                  const cls = classes.find((x) => x.id === c.class_id)
+                  const sub = c.status === 'ob'
+                    ? `OB${c.grad_year ? `（${c.grad_year}年度卒）` : ''}`
+                    : classLabel(cls) || 'クラス未設定'
+                  return (
+                    <li key={c.id} className="flex items-center gap-2">
+                      <span className="font-bold">{c.full_name}</span>
+                      <span className="text-xs text-gray-500">{sub}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
       </Card>
 
       <Card>
