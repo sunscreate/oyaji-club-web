@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import { formatDateJP, formatTimeRange } from '../lib/format'
 import { Button, Card, Spinner } from '../components/ui'
 import type { EventRow } from '../types'
@@ -13,9 +14,16 @@ interface Announcement {
   created_at: string
 }
 
+interface FeedbackNotice {
+  unreadThreads: number
+  newFaqs: number
+}
+
 export default function Home() {
+  const { profile } = useAuth()
   const [next, setNext] = useState<EventRow | null>(null)
   const [announcement, setAnnouncement] = useState<Announcement | null>(null)
+  const [feedbackNotice, setFeedbackNotice] = useState<FeedbackNotice>({ unreadThreads: 0, newFaqs: 0 })
   const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -49,8 +57,78 @@ export default function Home() {
     })()
   }, [])
 
+  useEffect(() => {
+    if (!profile?.id) return
+    ;(async () => {
+      const { data: seenRow } = await supabase
+        .from('profile_notification_reads')
+        .select('feedback_threads_seen_at,feedback_faq_seen_at')
+        .eq('profile_id', profile.id)
+        .maybeSingle()
+      const threadSeenAt = seenRow?.feedback_threads_seen_at ?? '1970-01-01T00:00:00.000Z'
+      const faqSeenAt = seenRow?.feedback_faq_seen_at ?? '1970-01-01T00:00:00.000Z'
+
+      const { data: myThreads } = await supabase
+        .from('feedback')
+        .select('id,is_published,replied_at')
+        .eq('profile_id', profile.id)
+      const threadIds = ((myThreads ?? []) as { id: string; is_published: boolean; replied_at: string | null }[]).map((t) => t.id)
+      const unreadThreadIds = new Set<string>()
+      if (threadIds.length > 0) {
+        const { data: staffMessages } = await supabase
+          .from('feedback_messages')
+          .select('feedback_id')
+          .in('feedback_id', threadIds)
+          .eq('sender_role', 'staff')
+          .gt('created_at', threadSeenAt)
+        ;((staffMessages ?? []) as { feedback_id: string }[]).forEach((m) => unreadThreadIds.add(m.feedback_id))
+        ;((myThreads ?? []) as { id: string; is_published: boolean; replied_at: string | null }[]).forEach((t) => {
+          if (t.is_published && t.replied_at && t.replied_at > threadSeenAt) unreadThreadIds.add(t.id)
+        })
+      }
+
+      const { count: newFaqs } = await supabase
+        .from('feedback')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_published', true)
+        .not('reply', 'is', null)
+        .gt('replied_at', faqSeenAt)
+
+      setFeedbackNotice({ unreadThreads: unreadThreadIds.size, newFaqs: newFaqs ?? 0 })
+    })()
+  }, [profile?.id])
+
   return (
     <div className="space-y-4">
+      {(feedbackNotice.unreadThreads > 0 || feedbackNotice.newFaqs > 0) && (
+        <section className="space-y-2">
+          {feedbackNotice.unreadThreads > 0 && (
+            <Link to="/feedback?view=mine" className="block">
+              <div className="rounded-2xl border-2 border-brand-red bg-red-50 p-4 shadow-sm active:scale-[0.99]">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="rounded-full bg-brand-red px-3 py-1 text-xs font-extrabold text-white">返信あり</span>
+                  <span className="text-xs font-bold text-gray-500">{feedbackNotice.unreadThreads}件</span>
+                </div>
+                <p className="text-lg font-extrabold text-black">ご意見・ご質問に返信が届いています</p>
+                <p className="mt-1 text-sm text-gray-700">タップして、やりとりを確認できます。</p>
+              </div>
+            </Link>
+          )}
+          {feedbackNotice.newFaqs > 0 && (
+            <Link to="/feedback?view=qa" className="block">
+              <div className="rounded-2xl border-2 border-brand-yellow bg-yellow-50 p-4 shadow-sm active:scale-[0.99]">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="rounded-full bg-brand-yellow px-3 py-1 text-xs font-extrabold text-black">質問回答</span>
+                  <span className="text-xs font-bold text-gray-500">{feedbackNotice.newFaqs}件</span>
+                </div>
+                <p className="text-lg font-extrabold text-black">新しい質問回答が公開されました</p>
+                <p className="mt-1 text-sm text-gray-700">みんなに共有された回答を確認できます。</p>
+              </div>
+            </Link>
+          )}
+        </section>
+      )}
+
       {announcement && (
         <Link to="/news" className="block">
           <div className="rounded-2xl border-2 border-brand-yellow bg-yellow-50 p-4 shadow-sm active:scale-[0.99]">

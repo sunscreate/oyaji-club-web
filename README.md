@@ -44,6 +44,7 @@ npm run dev               # http://localhost:5173
    - `supabase/migrations/0012_tshirt_delivery.sql`（Tシャツ受け渡し管理）
    - `supabase/migrations/0013_first_registered_admin.sql`（初回登録者を会長・オーナーにする）
    - `supabase/migrations/0014_feedback_threads.sql`（ご意見・ご質問の個別やりとり）
+   - `supabase/migrations/0015_feedback_notifications.sql`（ご意見・ご質問のホーム通知）
    - `supabase/seed.sql`（園コード・クラス・オーナー設定 ※後述）
 3. **Authentication > Providers > Email** を有効化。
    メールアドレスを使わず「氏名 + パスワード」で登録するため、**Confirm email = OFF** にする。

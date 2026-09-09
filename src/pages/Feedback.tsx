@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Button, Card, EmptyState, ErrorText, Field, Input, PageTitle, Spinner, Textarea } from '../components/ui'
@@ -23,7 +24,8 @@ type View = 'new' | 'mine' | 'qa'
 
 export default function Feedback() {
   const { profile } = useAuth()
-  const [view, setView] = useState<View>('new')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [view, setViewState] = useState<View>(() => parseView(searchParams.get('view')))
   const [name, setName] = useState(profile?.full_name ?? '')
   const [anon, setAnon] = useState(false)
   const [content, setContent] = useState('')
@@ -36,6 +38,11 @@ export default function Feedback() {
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
   const [loadingMine, setLoadingMine] = useState(true)
   const [replyBusyId, setReplyBusyId] = useState<string | null>(null)
+
+  function setView(next: View) {
+    setViewState(next)
+    setSearchParams(next === 'new' ? {} : { view: next }, { replace: true })
+  }
 
   const loadQA = useCallback(async () => {
     const { data } = await supabase
@@ -75,14 +82,37 @@ export default function Feedback() {
     setLoadingMine(false)
   }, [profile?.id])
 
+  const markSeen = useCallback(async (target: 'threads' | 'faq') => {
+    if (!profile?.id) return
+    const now = new Date().toISOString()
+    if (target === 'threads') {
+      await supabase
+        .from('profile_notification_reads')
+        .upsert({ profile_id: profile.id, feedback_threads_seen_at: now, updated_at: now }, { onConflict: 'profile_id' })
+      return
+    }
+    await supabase
+      .from('profile_notification_reads')
+      .upsert({ profile_id: profile.id, feedback_faq_seen_at: now, updated_at: now }, { onConflict: 'profile_id' })
+  }, [profile?.id])
+
   useEffect(() => {
     setName(profile?.full_name ?? '')
   }, [profile?.full_name])
 
   useEffect(() => {
+    setViewState(parseView(searchParams.get('view')))
+  }, [searchParams])
+
+  useEffect(() => {
     loadQA()
     loadMine()
   }, [loadQA, loadMine])
+
+  useEffect(() => {
+    if (view === 'mine') markSeen('threads')
+    if (view === 'qa') markSeen('faq')
+  }, [markSeen, view])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -215,6 +245,11 @@ export default function Feedback() {
       )}
     </div>
   )
+}
+
+function parseView(value: string | null): View {
+  if (value === 'mine' || value === 'qa') return value
+  return 'new'
 }
 
 function Tab({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
