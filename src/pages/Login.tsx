@@ -57,6 +57,9 @@ export default function Login() {
         はじめての方は{' '}
         <Link to="/signup" className="font-bold text-brand-red underline">新規登録</Link>
       </p>
+      <p className="mt-3 text-center text-sm text-gray-500">
+        <Link to="/guide" className="font-bold text-brand-red underline">使い方ガイドを見る</Link>
+      </p>
     </PlainLayout>
   )
 }

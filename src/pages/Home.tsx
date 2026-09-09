@@ -168,6 +168,7 @@ export default function Home() {
         <Tile to="/news" icon="📢" label="お知らせ" />
         <Tile to="/photos" icon="📷" label="写真" />
         <Tile to="/feedback" icon="✉️" label="ご意見・ご質問" />
+        <Tile to="/guide" icon="📖" label="使い方" />
         <Tile to="/about" icon="🦁" label="おやじ倶楽部について" />
       </section>
     </div>

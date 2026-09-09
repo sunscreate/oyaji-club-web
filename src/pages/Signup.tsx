@@ -133,6 +133,9 @@ export default function Signup() {
             登録済みの方は{' '}
             <Link to="/login" className="font-bold text-brand-red underline">ログイン</Link>
           </p>
+          <p className="mt-3 text-center text-sm text-gray-500">
+            <Link to="/guide" className="font-bold text-brand-red underline">使い方ガイドを見る</Link>
+          </p>
         </div>
       )}
 
@@ -200,6 +203,11 @@ export default function Signup() {
         <p className="mt-6 text-center text-gray-600">
           登録済みの方は{' '}
           <Link to="/login" className="font-bold text-brand-red underline">ログイン</Link>
+        </p>
+      )}
+      {mode && (
+        <p className="mt-3 text-center text-sm text-gray-500">
+          <Link to="/guide" className="font-bold text-brand-red underline">使い方ガイドを見る</Link>
         </p>
       )}
     </PlainLayout>

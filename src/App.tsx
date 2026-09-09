@@ -4,6 +4,7 @@ import { RequireAuth, RequireStaff } from './components/guards'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import RegisterProfile from './pages/RegisterProfile'
+import Guide from './pages/Guide'
 import Home from './pages/Home'
 import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
@@ -46,6 +47,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/register" element={<RegisterProfile />} />
+      <Route path="/guide" element={<Guide />} />
 
       <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
         <Route path="/" element={<Home />} />
