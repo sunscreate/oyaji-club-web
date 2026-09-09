@@ -159,7 +159,7 @@ export default function Signup() {
             {mode === 'new' ? (
               <div className="space-y-3">
                 <Field label="園コード">
-                  <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="saginuma-2026" required />
+                  <Input value={code} onChange={(e) => setCode(e.target.value)} required />
                 </Field>
                 <Field label="世帯名（任意）">
                   <Input value={householdName} onChange={(e) => setHouseholdName(e.target.value)} placeholder="未入力なら「氏名＋家」" />
