@@ -65,8 +65,9 @@ export default function EventDetail() {
   if (loading) return <Spinner />
   if (!event) return <Card><p>イベントが見つかりません。</p><Link to="/events" className="text-brand-red underline">一覧へ戻る</Link></Card>
 
-  const householdCount = parts.length
-  const peopleCount = members.length
+  const attendingParts = parts.filter((p) => p.join_type !== 'absent')
+  const householdCount = attendingParts.length
+  const peopleCount = members.filter((m) => attendingParts.some((p) => p.id === m.participation_id)).length
   const myPart = profile?.household_id ? parts.find((p) => p.household_id === profile.household_id) : undefined
   const myMembers = myPart ? members.filter((m) => m.participation_id === myPart.id) : []
 
@@ -147,11 +148,11 @@ export default function EventDetail() {
       {event.attendance_enabled && (
         <section>
           <h2 className="mb-2 text-sm font-bold text-gray-500">参加予定のご家族</h2>
-          {parts.length === 0 ? (
+          {attendingParts.length === 0 ? (
             <Card><p className="text-gray-500">まだ参加登録はありません。</p></Card>
           ) : (
             <div className="space-y-3">
-              {parts.map((p) => {
+              {attendingParts.map((p) => {
                 const kids = members.filter((m) => m.participation_id === p.id && m.member_kind === 'child')
                 return (
                   <Card key={p.id}>
@@ -212,6 +213,7 @@ function ParticipationForm({
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [ready, setReady] = useState(false)
+  const isDeclined = myPart?.join_type === 'absent'
 
   useEffect(() => {
     if (!profile?.household_id) { setReady(true); return }
@@ -229,6 +231,14 @@ function ParticipationForm({
   // 既存参加の内容をフォームへ反映（大人=profile_id / 子ども=child_id で照合）
   useEffect(() => {
     if (!myPart) return
+    if (myPart.join_type === 'absent') {
+      setJoinType('full')
+      setPlannedTime('')
+      setNote(myPart.note ?? '')
+      setCheckedAdults(new Set())
+      setCheckedChildren(new Set())
+      return
+    }
     setJoinType(myPart.join_type === 'partial' ? 'partial' : 'full')
     setPlannedTime(myPart.planned_time ?? '')
     setNote(myPart.note ?? '')
@@ -288,10 +298,26 @@ function ParticipationForm({
     }
   }
 
-  async function cancel() {
-    if (!myPart) return
+  async function decline() {
+    if (!profile?.household_id) return
     setBusy(true)
-    await supabase.from('participations').delete().eq('id', myPart.id)
+    setErr('')
+    try {
+      const { data: up, error } = await supabase
+        .from('participations')
+        .upsert(
+          { event_id: eventId, household_id: profile.household_id, join_type: 'absent', planned_time: null, note: note || null, created_by: profile.id },
+          { onConflict: 'event_id,household_id' },
+        )
+        .select('id')
+        .single()
+      if (error) throw error
+      const pid = (up as { id: string }).id
+      await supabase.from('participation_members').delete().eq('participation_id', pid)
+    } catch (e) {
+      setErr('保存に失敗しました。時間をおいて再度お試しください。')
+      console.error(e)
+    }
     await onSaved()
     setCheckedAdults(new Set())
     setCheckedChildren(new Set())
@@ -300,8 +326,11 @@ function ParticipationForm({
 
   return (
     <Card>
-      <h2 className="mb-3 text-lg font-extrabold">{myPart ? '参加内容の変更' : 'イベントに参加する'}</h2>
+      <h2 className="mb-3 text-lg font-extrabold">{myPart ? '参加回答の変更' : 'イベントへの参加確認'}</h2>
       <div className="space-y-4">
+        {isDeclined && (
+          <p className="rounded-xl bg-gray-50 px-4 py-3 text-sm font-bold text-gray-700">現在は「参加しない」で回答済みです。</p>
+        )}
         <div>
           <p className="mb-1 text-sm font-bold text-gray-700">参加する家族</p>
           <div className="space-y-2">
@@ -337,8 +366,8 @@ function ParticipationForm({
         </Field>
 
         <ErrorText>{err}</ErrorText>
-        <Button onClick={save} disabled={busy}>{busy ? '…' : myPart ? '変更を保存' : '参加する'}</Button>
-        {myPart && <Button variant="danger" onClick={cancel} disabled={busy}>参加をキャンセル</Button>}
+        <Button onClick={save} disabled={busy}>{busy ? '…' : isDeclined ? '参加に変更する' : myPart ? '変更を保存' : '参加する'}</Button>
+        <Button variant="danger" onClick={decline} disabled={busy}>{busy ? '…' : '参加しない'}</Button>
       </div>
     </Card>
   )

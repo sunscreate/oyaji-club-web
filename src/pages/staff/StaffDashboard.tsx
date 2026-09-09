@@ -25,7 +25,7 @@ export default function StaffDashboard() {
     const ev = ((data ?? [])[0] as EventRow) ?? null
     setNext(ev)
     if (ev) {
-      const { data: ps } = await supabase.from('participations').select('id').eq('event_id', ev.id)
+      const { data: ps } = await supabase.from('participations').select('id').eq('event_id', ev.id).neq('join_type', 'absent')
       const pIds = (ps ?? []).map((p) => (p as { id: string }).id)
       let people = 0
       if (pIds.length) {

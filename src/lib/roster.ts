@@ -37,7 +37,7 @@ export async function loadRoster(eventId: string): Promise<RosterData> {
   const feeType = event?.fee_type ?? 'household'
   const cfg = (event?.fee_config ?? {}) as FeeConfig
 
-  const { data: ps } = await supabase.from('participations').select('id,household_id').eq('event_id', eventId)
+  const { data: ps } = await supabase.from('participations').select('id,household_id').eq('event_id', eventId).neq('join_type', 'absent')
   const parts = (ps ?? []) as { id: string; household_id: string }[]
   const pIds = parts.map((p) => p.id)
   const hhIds = [...new Set(parts.map((p) => p.household_id))]

@@ -34,7 +34,7 @@ export default function MyPage() {
         .order('year', { ascending: false })
       setHistory((hist ?? []) as { role: string; year: number | null }[])
       if (profile.household_id) {
-        const { data: parts } = await supabase.from('participations').select('event_id').eq('household_id', profile.household_id)
+        const { data: parts } = await supabase.from('participations').select('event_id').eq('household_id', profile.household_id).neq('join_type', 'absent')
         const ids = (parts ?? []).map((p) => (p as { event_id: string }).event_id)
         if (ids.length) {
           const { data: evs } = await supabase.from('events').select('*').in('id', ids).order('event_date', { ascending: true })

@@ -44,8 +44,12 @@ export default function StaffParticipants() {
 
   if (loading) return <Spinner />
 
-  const adults = members.filter((m) => m.member_kind === 'adult').length
-  const kids = members.filter((m) => m.member_kind === 'child').length
+  const attendingParts = parts.filter((p) => p.join_type !== 'absent')
+  const absentParts = parts.filter((p) => p.join_type === 'absent')
+  const attendingPartIds = new Set(attendingParts.map((p) => p.id))
+  const attendingMembers = members.filter((m) => attendingPartIds.has(m.participation_id))
+  const adults = attendingMembers.filter((m) => m.member_kind === 'adult').length
+  const kids = attendingMembers.filter((m) => m.member_kind === 'child').length
 
   return (
     <div className="space-y-4">
@@ -57,7 +61,7 @@ export default function StaffParticipants() {
 
       <Card>
         <div className="grid grid-cols-3 gap-2 text-center">
-          <Stat label="世帯" value={parts.length} />
+          <Stat label="世帯" value={attendingParts.length} />
           <Stat label="大人" value={adults} />
           <Stat label="子ども" value={kids} />
         </div>
@@ -66,11 +70,11 @@ export default function StaffParticipants() {
 
       <section>
         <h2 className="mb-2 text-sm font-bold text-gray-500">参加世帯</h2>
-        {parts.length === 0 ? (
+        {attendingParts.length === 0 ? (
           <EmptyState>まだ参加登録はありません。</EmptyState>
         ) : (
           <div className="space-y-3">
-            {parts.map((p) => {
+            {attendingParts.map((p) => {
               const mine = members.filter((m) => m.participation_id === p.id)
               return (
                 <Card key={p.id}>
@@ -91,13 +95,27 @@ export default function StaffParticipants() {
         )}
       </section>
 
+      {absentParts.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-bold text-gray-500">参加しない回答（{absentParts.length}世帯）</h2>
+          <div className="space-y-3">
+            {absentParts.map((p) => (
+              <Card key={p.id}>
+                <p className="font-extrabold">{households[p.household_id] ?? 'ご家族'}</p>
+                {p.note && <p className="mt-1 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">📝 {p.note}</p>}
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section>
-        <h2 className="mb-2 text-sm font-bold text-gray-500">参加者のアレルギー（{allergies.length}件）</h2>
-        {allergies.length === 0 ? (
+        <h2 className="mb-2 text-sm font-bold text-gray-500">参加者のアレルギー（{allergies.filter((a) => attendingParts.some((p) => p.household_id === a.household_id)).length}件）</h2>
+        {allergies.filter((a) => attendingParts.some((p) => p.household_id === a.household_id)).length === 0 ? (
           <Card><p className="text-gray-500">登録されたアレルギーはありません。</p></Card>
         ) : (
           <Card className="divide-y divide-gray-100 p-0">
-            {allergies.map((a) => (
+            {allergies.filter((a) => attendingParts.some((p) => p.household_id === a.household_id)).map((a) => (
               <div key={a.id} className="flex items-center gap-3 px-4 py-3">
                 <span className="text-xs text-gray-400">{households[a.household_id] ?? ''}</span>
                 <span className="font-bold">{a.target_name}</span>
