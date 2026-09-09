@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { Button, Card, EmptyState, PageTitle, Spinner, Textarea } from '../../components/ui'
+import { Button, Card, EmptyState, ErrorText, PageTitle, Spinner, Textarea } from '../../components/ui'
 
 interface FB {
   id: string; name: string | null; is_anonymous: boolean; content: string; status: string; created_at: string
@@ -12,6 +12,9 @@ export default function StaffFeedback() {
   const [rows, setRows] = useState<FB[]>([])
   const [loading, setLoading] = useState(true)
   const [drafts, setDrafts] = useState<Record<string, string>>({})
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [err, setErr] = useState('')
+  const [savedId, setSavedId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('feedback').select('*').order('created_at', { ascending: false })
@@ -26,21 +29,44 @@ export default function StaffFeedback() {
   useEffect(() => { load() }, [load])
 
   async function setStatus(f: FB, status: string) {
-    await supabase.from('feedback').update({ status }).eq('id', f.id)
+    setErr('')
+    const { data, error } = await supabase.from('feedback').update({ status }).eq('id', f.id).select('id').maybeSingle()
+    if (error || !data) {
+      setErr(`更新に失敗しました: ${error?.message ?? '更新権限がないか、対象が見つかりません。'}`)
+      return
+    }
     await load()
   }
   async function saveReply(f: FB, publish: boolean) {
     const reply = (drafts[f.id] ?? '').trim()
-    await supabase.from('feedback').update({
+    setErr('')
+    setSavedId(null)
+    if (publish && !reply) {
+      setErr('公開して返信するには、返信内容を入力してください。')
+      return
+    }
+    setBusyId(f.id)
+    const { data, error } = await supabase.from('feedback').update({
       reply: reply || null,
       replied_at: reply ? new Date().toISOString() : null,
-      is_published: publish,
+      is_published: publish && !!reply,
       status: 'read',
-    }).eq('id', f.id)
+    }).eq('id', f.id).select('id').maybeSingle()
+    setBusyId(null)
+    if (error || !data) {
+      setErr(`返信の保存に失敗しました: ${error?.message ?? '更新権限がないか、対象が見つかりません。'}`)
+      return
+    }
+    setSavedId(f.id)
     await load()
   }
   async function remove(f: FB) {
-    await supabase.from('feedback').delete().eq('id', f.id)
+    setErr('')
+    const { data, error } = await supabase.from('feedback').delete().eq('id', f.id).select('id').maybeSingle()
+    if (error || !data) {
+      setErr(`削除に失敗しました: ${error?.message ?? '削除権限がないか、対象が見つかりません。'}`)
+      return
+    }
     await load()
   }
 
@@ -55,6 +81,7 @@ export default function StaffFeedback() {
         {unread > 0 && <span className="rounded-full bg-brand-red px-3 py-1 text-sm font-bold text-white">未確認 {unread}件</span>}
       </div>
       <p className="text-sm text-gray-500">返信を書いて「公開して返信」すると、みんなの質問・回答ページに掲載されます。</p>
+      <ErrorText>{err}</ErrorText>
 
       {rows.length === 0 ? (
         <EmptyState>まだ投稿はありません。</EmptyState>
@@ -73,9 +100,14 @@ export default function StaffFeedback() {
               <p className="mb-1 text-xs font-bold text-gray-500">返信</p>
               <Textarea rows={2} value={drafts[f.id] ?? ''} onChange={(e) => setDrafts((p) => ({ ...p, [f.id]: e.target.value }))} placeholder="回答を入力" />
               <div className="mt-2 flex flex-wrap gap-2">
-                <Button variant="secondary" className="w-auto px-4" onClick={() => saveReply(f, true)}>公開して返信</Button>
-                <Button variant="ghost" className="w-auto px-4" onClick={() => saveReply(f, false)}>非公開で保存</Button>
+                <Button type="button" variant="secondary" className="w-auto px-4" onClick={() => saveReply(f, true)} disabled={busyId === f.id}>
+                  {busyId === f.id ? '保存中…' : '公開して返信'}
+                </Button>
+                <Button type="button" variant="ghost" className="w-auto px-4" onClick={() => saveReply(f, false)} disabled={busyId === f.id}>
+                  非公開で保存
+                </Button>
               </div>
+              {savedId === f.id && <p className="mt-2 text-sm font-bold text-green-700">保存しました</p>}
             </div>
 
             <div className="mt-2 flex gap-2">
