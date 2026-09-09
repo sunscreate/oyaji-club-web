@@ -41,12 +41,6 @@ export default function Login() {
         <img src={logo} alt="おやじ倶楽部" className="mb-3 w-40 rounded-lg" />
         <h1 className="text-xl font-extrabold">さぎぬま幼稚園 おやじ倶楽部</h1>
       </div>
-      <Card className="mb-4 border-2 border-brand-yellow bg-yellow-50">
-        <p className="text-center text-sm font-bold text-gray-700">はじめて使う方はこちら</p>
-        <Link to="/guide" className="mt-2 block">
-          <Button type="button" variant="secondary">まず使い方ガイドを開く</Button>
-        </Link>
-      </Card>
       <Card>
         <form onSubmit={onSubmit} className="space-y-4">
           <Field label="氏名">

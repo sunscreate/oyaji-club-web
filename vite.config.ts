@@ -18,6 +18,8 @@ export default defineConfig({
         theme_color: '#d32f2f',
         background_color: '#ffffff',
         display: 'standalone',
+        start_url: '/oyaji-club-web/#/guide',
+        scope: '/oyaji-club-web/',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
