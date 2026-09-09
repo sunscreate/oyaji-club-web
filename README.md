@@ -43,6 +43,7 @@ npm run dev               # http://localhost:5173
    - `supabase/migrations/0011_set_signup_code.sql`（園コードを `saginuma-2026` に設定）
    - `supabase/migrations/0012_tshirt_delivery.sql`（Tシャツ受け渡し管理）
    - `supabase/migrations/0013_first_registered_admin.sql`（初回登録者を会長・オーナーにする）
+   - `supabase/migrations/0014_feedback_threads.sql`（ご意見・ご質問の個別やりとり）
    - `supabase/seed.sql`（園コード・クラス・オーナー設定 ※後述）
 3. **Authentication > Providers > Email** を有効化。
    メールアドレスを使わず「氏名 + パスワード」で登録するため、**Confirm email = OFF** にする。
