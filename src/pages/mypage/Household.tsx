@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -14,6 +14,13 @@ export default function Household() {
   const [busy, setBusy] = useState(false)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [copyMode, setCopyMode] = useState<'code' | 'message'>('message')
+  const copyTextRef = useRef<HTMLTextAreaElement>(null)
+  const signupUrl = `${window.location.origin}${import.meta.env.BASE_URL}#/signup`
+  const copyText = useMemo(() => (
+    copyMode === 'message'
+      ? `さぎぬま幼稚園 おやじ倶楽部サイトの家族招待です。\n\n登録はこちら：${signupUrl}\n家族招待コード：${invite}\n\n新規登録画面で「家族の世帯に参加」を選び、このコードを入力してください。`
+      : invite
+  ), [copyMode, invite, signupUrl])
 
   useEffect(() => {
     ;(async () => {
@@ -44,44 +51,48 @@ export default function Household() {
     setCopyStatus('idle')
   }
 
-  function copyWithFallback(text: string) {
-    const area = document.createElement('textarea')
-    area.value = text
-    area.setAttribute('readonly', '')
-    area.style.position = 'fixed'
-    area.style.top = '0'
-    area.style.left = '0'
-    area.style.opacity = '0'
-    document.body.appendChild(area)
+  function selectCopyText() {
+    const area = copyTextRef.current
+    if (!area) return false
     area.focus()
     area.select()
-    const ok = document.execCommand('copy')
-    document.body.removeChild(area)
-    return ok
+    area.setSelectionRange(0, area.value.length)
+    return true
   }
 
   async function copy() {
-    const signupUrl = `${window.location.origin}${import.meta.env.BASE_URL}#/signup`
-    const text = copyMode === 'message'
-      ? `さぎぬま幼稚園 おやじ倶楽部サイトの家族招待です。\n\n登録はこちら：${signupUrl}\n家族招待コード：${invite}\n\n新規登録画面で「家族の世帯に参加」を選び、このコードを入力してください。`
-      : invite
+    setCopyStatus('idle')
+    selectCopyText()
     try {
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text)
-      } else if (!copyWithFallback(text)) {
+        await navigator.clipboard.writeText(copyText)
+      } else if (!document.execCommand('copy')) {
         throw new Error('copy failed')
       }
       setCopyStatus('copied')
       setTimeout(() => setCopyStatus('idle'), 1800)
     } catch {
       try {
-        if (!copyWithFallback(text)) throw new Error('copy failed')
+        selectCopyText()
+        if (!document.execCommand('copy')) throw new Error('copy failed')
         setCopyStatus('copied')
         setTimeout(() => setCopyStatus('idle'), 1800)
       } catch {
         setCopyStatus('failed')
       }
     }
+  }
+
+  async function share() {
+    if (!navigator.share) return
+    try {
+      await navigator.share({
+        title: 'さぎぬま幼稚園 おやじ倶楽部 家族招待',
+        text: copyText,
+      })
+      setCopyStatus('copied')
+      setTimeout(() => setCopyStatus('idle'), 1800)
+    } catch { /* user cancelled */ }
   }
 
   if (loading) return <Spinner />
@@ -132,11 +143,25 @@ export default function Household() {
                 コードだけ
               </button>
             </div>
-            <button type="button" onClick={copy} className="w-full rounded-xl bg-brand-yellow px-4 py-3 font-bold">
-              {copyStatus === 'copied' ? 'コピー済' : 'コピーする'}
-            </button>
+            <textarea
+              ref={copyTextRef}
+              readOnly
+              value={copyText}
+              onFocus={(e) => e.currentTarget.select()}
+              className="h-36 w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-sm font-bold leading-relaxed text-gray-800"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={copy} className="rounded-xl bg-brand-yellow px-4 py-3 font-bold">
+                {copyStatus === 'copied' ? 'コピー済' : 'コピーする'}
+              </button>
+              {'share' in navigator ? (
+                <button type="button" onClick={share} className="rounded-xl bg-brand-red px-4 py-3 font-bold text-white">共有する</button>
+              ) : (
+                <button type="button" onClick={selectCopyText} className="rounded-xl border border-gray-300 bg-white px-4 py-3 font-bold text-gray-700">選択する</button>
+              )}
+            </div>
             {copyStatus === 'copied' && <p className="text-center text-sm font-bold text-green-600">コピーしました</p>}
-            {copyStatus === 'failed' && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-brand-red">コピーできませんでした。コードを長押ししてコピーしてください。</p>}
+            {copyStatus === 'failed' && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-brand-red">自動コピーできませんでした。上の文章を長押ししてコピーしてください。</p>}
           </div>
         ) : (
           <p className="mb-3 text-gray-500">まだ招待コードがありません。</p>
