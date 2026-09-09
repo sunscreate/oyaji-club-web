@@ -6,8 +6,7 @@ import { PlainLayout } from '../components/Layout'
 import { Button, Card, ErrorText, Field, Input, Select, Spinner } from '../components/ui'
 import type { MemberType } from '../types'
 
-/** 認証済だが profiles 未作成のとき、園コード/招待コードで登録を完了する画面。
- *  確認メール完了後の初回ログインで、signUp 時のメタデータを引き継いで自動反映する。 */
+/** 認証済だが profiles 未作成のとき、園コード/招待コードで登録を完了する画面。 */
 export default function RegisterProfile() {
   const { session, needsRegistration, loading, refresh } = useAuth()
   const nav = useNavigate()
@@ -77,7 +76,7 @@ export default function RegisterProfile() {
   return (
     <PlainLayout>
       <h1 className="mb-3 text-xl font-extrabold">登録の完了</h1>
-      <p className="mb-4 text-gray-700">メール確認ありがとうございます。登録内容を確認して完了してください。</p>
+      <p className="mb-4 text-gray-700">登録内容を確認して完了してください。</p>
       <Card>
         <form onSubmit={onSubmit} className="space-y-4">
           <Field label="氏名">

@@ -79,9 +79,9 @@ export default function StaffPrep() {
 
         <div className="mt-4">
           <label className="mb-1 block text-sm font-bold text-gray-700">予算を設定（円）</label>
-          <div className="flex gap-2">
-            <Input type="number" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="60000" className="flex-1" />
-            <Button variant="ghost" className="w-auto shrink-0 px-5" onClick={saveBudget}>保存</Button>
+          <div className="space-y-2">
+            <Input type="number" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="60000" />
+            <Button variant="ghost" className="py-3 text-base" onClick={saveBudget}>保存</Button>
           </div>
         </div>
 
@@ -167,9 +167,9 @@ function ItemForm({ eventId, onCancel, onSaved }: { eventId: string; onCancel: (
       </div>
       <Field label="購入先"><Input value={store} onChange={(e) => setStore(e.target.value)} /></Field>
       <Field label="備考"><Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 gap-2">
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={busy}>キャンセル</Button>
         <Button type="submit" disabled={busy}>{busy ? '…' : '追加'}</Button>
-        <Button type="button" variant="ghost" onClick={onCancel}>キャンセル</Button>
       </div>
     </form>
   )

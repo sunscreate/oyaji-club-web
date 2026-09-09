@@ -6,22 +6,38 @@ import { Button, Card, Spinner } from '../components/ui'
 import type { EventRow } from '../types'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
+interface Announcement {
+  id: string
+  title: string
+  content: string
+  created_at: string
+}
+
 export default function Home() {
   const [next, setNext] = useState<EventRow | null>(null)
+  const [announcement, setAnnouncement] = useState<Announcement | null>(null)
   const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     ;(async () => {
       const today = new Date().toISOString().slice(0, 10)
-      const { data } = await supabase
-        .from('events')
-        .select('*')
-        .eq('status', 'published')
-        .gte('event_date', today)
-        .order('event_date', { ascending: true })
-        .limit(1)
+      const [{ data }, { data: anns }] = await Promise.all([
+        supabase
+          .from('events')
+          .select('*')
+          .eq('status', 'published')
+          .gte('event_date', today)
+          .order('event_date', { ascending: true })
+          .limit(1),
+        supabase
+          .from('announcements')
+          .select('id,title,content,created_at')
+          .order('created_at', { ascending: false })
+          .limit(1),
+      ])
       const ev = ((data ?? [])[0] as EventRow) ?? null
+      setAnnouncement(((anns ?? [])[0] as Announcement) ?? null)
       setNext(ev)
       if (ev?.image_path) {
         const { data: signed } = await supabase.storage.from('event-media').createSignedUrl(ev.image_path, 3600)
@@ -35,6 +51,19 @@ export default function Home() {
 
   return (
     <div className="space-y-4">
+      {announcement && (
+        <Link to="/news" className="block">
+          <div className="rounded-2xl border-2 border-brand-yellow bg-yellow-50 p-4 shadow-sm active:scale-[0.99]">
+            <div className="mb-1 flex items-center gap-2">
+              <span className="rounded-full bg-brand-red px-3 py-1 text-xs font-extrabold text-white">新しいお知らせ</span>
+              <span className="text-xs font-bold text-gray-500">{formatDateJP(announcement.created_at.slice(0, 10))}</span>
+            </div>
+            <p className="text-lg font-extrabold text-black">{announcement.title}</p>
+            <p className="mt-1 line-clamp-2 text-sm text-gray-700">{announcement.content}</p>
+          </div>
+        </Link>
+      )}
+
       <section>
         <h2 className="mb-2 text-sm font-bold text-gray-500">次のイベント</h2>
         {loading ? (

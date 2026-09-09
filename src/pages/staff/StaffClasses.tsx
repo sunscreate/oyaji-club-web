@@ -1,5 +1,22 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { supabase } from '../../lib/supabase'
 import { Button, Card, EmptyState, ErrorText, Field, Input, PageTitle, Select, Spinner } from '../../components/ui'
 import type { ClassRow } from '../../types'
@@ -12,6 +29,10 @@ export default function StaffClasses() {
   const [adding, setAdding] = useState(false)
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -33,6 +54,27 @@ export default function StaffClasses() {
       return
     }
     await load()
+  }
+
+  async function moveClass(event: DragEndEvent) {
+    const activeId = String(event.active.id)
+    const overId = event.over ? String(event.over.id) : ''
+    if (!overId || activeId === overId) return
+    setErr('')
+    const from = rows.findIndex((r) => r.id === activeId)
+    const to = rows.findIndex((r) => r.id === overId)
+    if (from < 0 || to < 0) return
+    const next = arrayMove(rows, from, to)
+    setRows(next)
+    const updates = next.map((row, index) =>
+      supabase.from('classes').update({ sort_order: (index + 1) * 10 }).eq('id', row.id),
+    )
+    const results = await Promise.all(updates)
+    const failed = results.find((r) => r.error)
+    if (failed?.error) {
+      setErr(`並び替えに失敗しました: ${failed.error.message}`)
+      await load()
+    }
   }
 
   if (loading) return <Spinner />
@@ -58,29 +100,67 @@ export default function StaffClasses() {
       {rows.length === 0 ? (
         <EmptyState>クラスがまだありません。</EmptyState>
       ) : (
-        <div className="space-y-3">
-          {rows.map((row) => (
-            <Card key={row.id}>
-              {editing?.id === row.id ? (
-                <ClassForm
-                  initial={row}
-                  onCancel={() => setEditing(null)}
-                  onSaved={async () => { setEditing(null); await load() }}
-                />
-              ) : (
-                <div className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <p className="text-lg font-extrabold">{row.year}年度 {row.grade} {row.name}</p>
-                    <p className="text-xs text-gray-500">表示順 {row.sort_order}</p>
-                  </div>
-                  <button onClick={() => setEditing(row)} className="text-sm font-bold text-brand-red">編集</button>
-                  <button onClick={() => remove(row)} className="text-sm text-gray-400">削除</button>
-                </div>
-              )}
-            </Card>
-          ))}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={moveClass}>
+          <SortableContext items={rows.map((row) => row.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-3">
+              {rows.map((row) => (
+                <SortableClassRow
+                  key={row.id}
+                  row={row}
+                  editing={editing?.id === row.id}
+                  onEdit={() => setEditing(row)}
+                  onRemove={() => remove(row)}
+                >
+                  <ClassForm
+                    initial={row}
+                    onCancel={() => setEditing(null)}
+                    onSaved={async () => { setEditing(null); await load() }}
+                  />
+                </SortableClassRow>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
+    </div>
+  )
+}
+
+function SortableClassRow({
+  row, editing, onEdit, onRemove, children,
+}: {
+  row: ClassRow
+  editing: boolean
+  onEdit: () => void
+  onRemove: () => void
+  children: React.ReactNode
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id })
+  const style = { transform: CSS.Transform.toString(transform), transition }
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className={isDragging ? 'opacity-60 shadow-lg' : ''}>
+        {editing ? children : (
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="touch-none rounded-lg bg-gray-100 px-3 py-2 text-lg font-extrabold text-gray-500"
+              aria-label={`${row.grade} ${row.name}を並び替え`}
+              {...attributes}
+              {...listeners}
+            >
+              ≡
+            </button>
+            <div className="flex-1">
+              <p className="text-lg font-extrabold">{row.year}年度 {row.grade} {row.name}</p>
+              <p className="text-xs text-gray-500">ドラッグで順番を入れ替え</p>
+            </div>
+            <button onClick={onEdit} className="text-sm font-bold text-brand-red">編集</button>
+            <button onClick={onRemove} className="text-sm text-gray-400">削除</button>
+          </div>
+        )}
+      </Card>
     </div>
   )
 }
@@ -95,7 +175,6 @@ function ClassForm({
   const [year, setYear] = useState(String(initial?.year ?? new Date().getFullYear()))
   const [grade, setGrade] = useState(initial?.grade ?? '年少')
   const [name, setName] = useState(initial?.name ?? '')
-  const [sortOrder, setSortOrder] = useState(String(initial?.sort_order ?? 10))
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
 
@@ -108,7 +187,7 @@ function ClassForm({
       year: Number(year) || new Date().getFullYear(),
       grade,
       name: name.trim(),
-      sort_order: Number(sortOrder) || 0,
+      sort_order: initial?.sort_order ?? 999,
     }
     const { error } = initial
       ? await supabase.from('classes').update(payload).eq('id', initial.id)
@@ -135,9 +214,6 @@ function ClassForm({
       </div>
       <Field label="クラス名">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="さくら組" required />
-      </Field>
-      <Field label="表示順">
-        <Input type="number" inputMode="numeric" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} />
       </Field>
       <ErrorText>{err}</ErrorText>
       <div className="grid grid-cols-2 gap-2">

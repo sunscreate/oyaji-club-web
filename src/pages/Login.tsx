@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { loginKeyToEmail, validateLoginKey } from '../lib/authKey'
 import { PlainLayout } from '../components/Layout'
 import { Button, Card, ErrorText, Field, Input } from '../components/ui'
 import logo from '../assets/logo.jpg'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [loginKey, setLoginKey] = useState('')
   const [password, setPassword] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
@@ -15,14 +16,19 @@ export default function Login() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErr('')
+    const keyError = validateLoginKey(loginKey)
+    if (keyError) {
+      setErr(keyError)
+      return
+    }
     setBusy(true)
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    const { error } = await supabase.auth.signInWithPassword({ email: loginKeyToEmail(loginKey), password })
     setBusy(false)
     if (error) {
       setErr(
         error.message.includes('Email not confirmed')
-          ? 'メールの確認が完了していません。届いた確認メールのリンクを開いてください。'
-          : 'メールアドレスまたはパスワードが正しくありません。',
+          ? '登録確認が完了していません。管理者に確認してください。'
+          : 'ログインキーまたはパスワードが正しくありません。',
       )
       return
     }
@@ -37,8 +43,8 @@ export default function Login() {
       </div>
       <Card>
         <form onSubmit={onSubmit} className="space-y-4">
-          <Field label="メールアドレス">
-            <Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Field label="ログインキー">
+            <Input autoComplete="username" value={loginKey} onChange={(e) => setLoginKey(e.target.value)} required />
           </Field>
           <Field label="パスワード">
             <Input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />

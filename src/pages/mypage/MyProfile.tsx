@@ -15,6 +15,7 @@ export default function MyProfile() {
   const [size, setSize] = useState('')
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [showTshirtNotice, setShowTshirtNotice] = useState(false)
 
   useEffect(() => {
     if (profile) {
@@ -29,6 +30,7 @@ export default function MyProfile() {
     e.preventDefault()
     setBusy(true)
     setSaved(false)
+    const newlyJoinedOyaji = !profile?.oyaji_member && oyaji
     await supabase.from('profiles').update({
       full_name: fullName.trim(),
       member_type: memberType,
@@ -38,6 +40,7 @@ export default function MyProfile() {
     await refresh()
     setBusy(false)
     setSaved(true)
+    if (newlyJoinedOyaji) setShowTshirtNotice(true)
   }
 
   return (
@@ -77,6 +80,15 @@ export default function MyProfile() {
           {saved && <p className="text-center text-sm font-bold text-green-600">保存しました</p>}
         </form>
       </Card>
+      {showTshirtNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 text-center shadow-xl">
+            <p className="text-xl font-extrabold text-brand-red">加盟ありがとうございます</p>
+            <p className="mt-3 text-gray-700">次回イベント時にTシャツをお渡しします。</p>
+            <Button className="mt-5" onClick={() => setShowTshirtNotice(false)}>閉じる</Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

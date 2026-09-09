@@ -118,7 +118,6 @@ export default function StaffDashboard() {
         <Tile to="/staff/announcements" icon="📢" label="お知らせ管理" />
         <Tile to="/staff/classes" icon="🏷" label="クラス管理" />
         <Tile to="/staff/roles" icon="👑" label="役職管理" />
-        <Tile to="/staff/tshirt" icon="👕" label="Tシャツ集計" />
       </section>
     </div>
   )

@@ -32,7 +32,6 @@ import StaffReception from './pages/staff/StaffReception'
 import StaffAccounting from './pages/staff/StaffAccounting'
 import StaffSurveyEditor from './pages/staff/StaffSurveyEditor'
 import StaffSurveyResults from './pages/staff/StaffSurveyResults'
-import StaffTshirt from './pages/staff/StaffTshirt'
 import StaffFeedback from './pages/staff/StaffFeedback'
 import StaffRoles from './pages/staff/StaffRoles'
 import StaffEventResults from './pages/staff/StaffEventResults'
@@ -82,7 +81,6 @@ export default function App() {
         <Route path="/staff/events/:id/survey" element={<StaffSurveyEditor />} />
         <Route path="/staff/events/:id/survey-results" element={<StaffSurveyResults />} />
         <Route path="/staff/events/:id/results" element={<StaffEventResults />} />
-        <Route path="/staff/tshirt" element={<StaffTshirt />} />
         <Route path="/staff/oyaji" element={<StaffOyajiMembers />} />
         <Route path="/staff/members" element={<StaffMembers />} />
         <Route path="/staff/feedback" element={<StaffFeedback />} />

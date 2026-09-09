@@ -13,6 +13,7 @@ export default function StaffAnnouncements() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [busy, setBusy] = useState(false)
+  const [posted, setPosted] = useState(false)
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('announcements').select('*').order('created_at', { ascending: false })
@@ -26,8 +27,10 @@ export default function StaffAnnouncements() {
     e.preventDefault()
     if (!title.trim() || !content.trim()) return
     setBusy(true)
+    setPosted(false)
     await supabase.from('announcements').insert({ title: title.trim(), content: content.trim(), created_by: profile?.id ?? null })
     setTitle(''); setContent(''); setBusy(false)
+    setPosted(true)
     await load()
   }
 
@@ -48,6 +51,7 @@ export default function StaffAnnouncements() {
           <Field label="タイトル"><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="次回イベントのお知らせ" required /></Field>
           <Field label="内容"><Textarea rows={4} value={content} onChange={(e) => setContent(e.target.value)} required /></Field>
           <Button type="submit" disabled={busy}>{busy ? '…' : '投稿する'}</Button>
+          {posted && <p className="rounded-xl bg-yellow-50 px-4 py-3 text-sm font-bold text-gray-800">投稿しました。ホーム上部に「新しいお知らせ」として表示されます。</p>}
         </form>
       </Card>
 

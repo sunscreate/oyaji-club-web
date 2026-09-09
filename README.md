@@ -40,10 +40,11 @@ npm run dev               # http://localhost:5173
    - `supabase/migrations/0008_self_delete.sql`（本人のアカウント削除）
    - `supabase/migrations/0009_fk_setnull.sql`（削除時のFK調整）
    - `supabase/migrations/0010_event_end_time_and_owner_trigger.sql`（イベント終了時間・オーナー自動付与トリガー）
+   - `supabase/migrations/0011_set_signup_code.sql`（園コードを `saginuma-2026` に設定）
+   - `supabase/migrations/0012_tshirt_delivery.sql`（Tシャツ受け渡し管理）
    - `supabase/seed.sql`（園コード・クラス・オーナー設定 ※後述）
 3. **Authentication > Providers > Email** を有効化。
-   本番運用では **Confirm email = ON** を推奨（実在アドレスの確認）。
-   確認 ON の場合、登録者はメール内リンクを開いた後にログイン→登録が自動完了する。
+   メールアドレスを使わず「ログインキー + パスワード」で登録するため、**Confirm email = OFF** にする。
 4. **Authentication > URL Configuration** の `Site URL` / `Redirect URLs` に
    本番URL（例 `https://<ユーザー名>.github.io/oyaji-club-web/`）を追加。
 5. **Storage**：`0002_photos.sql` が Private バケット `event-photos` とポリシーを自動作成する。
@@ -72,8 +73,8 @@ npm run dev               # http://localhost:5173
 2. **クラス登録**: 初期投入は `insert into classes ...` を実際の組名に合わせて編集。運用開始後はサイト内の「お世話係 > クラス管理」から追加・修正できる。
 3. **サイトオーナー設定**:
    - まず自分がサイトから「新規登録（園コード入力）」を完了する。
-   - `seed.sql` の `<YOUR_EMAIL>` を自分のメールに変え、オーナー付与SQLを実行。
-   - `0010` 実行後は `sunscreate528@gmail.com` の初回登録時にオーナー・会長が自動付与される。
+   - `seed.sql` の `<YOUR_EMAIL>` を登録時の内部メール形式（例 `ログインキー@oyaji-club.example.com`）に変え、オーナー付与SQLを実行。
+   - メールなし登録では、オーナー自動付与より `seed.sql` または「お世話係 > 役職管理」での付与を推奨。
    - オーナー権限は永久保持（会長職とは独立）。会長・お世話係の付与はサイト内の「お世話係 > 役職管理」から操作できる。
 
 ## 5. GitHub リポジトリ & Pages 公開

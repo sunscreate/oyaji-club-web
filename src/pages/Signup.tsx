@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { loginKeyToEmail, normalizeLoginKey, validateLoginKey } from '../lib/authKey'
 import { completeRegistration } from '../lib/register'
 import { PlainLayout } from '../components/Layout'
 import { Button, Card, ErrorText, Field, Input, Select } from '../components/ui'
@@ -10,7 +11,7 @@ type Mode = 'new' | 'join'
 
 export default function Signup() {
   const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
+  const [loginKey, setLoginKey] = useState('')
   const [password, setPassword] = useState('')
   const [memberType, setMemberType] = useState<MemberType>('current')
   const [mode, setMode] = useState<Mode>('new')
@@ -25,16 +26,21 @@ export default function Signup() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErr('')
+    const keyError = validateLoginKey(loginKey)
+    if (keyError) {
+      setErr(keyError)
+      return
+    }
     setBusy(true)
-    const meta = { full_name: fullName.trim(), member_type: memberType, mode, household_name: householdName.trim(), code: code.trim() }
+    const meta = { full_name: fullName.trim(), member_type: memberType, mode, household_name: householdName.trim(), code: code.trim(), login_key: normalizeLoginKey(loginKey) }
     const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: loginKeyToEmail(loginKey),
       password,
       options: { data: meta },
     })
     if (error) {
       setBusy(false)
-      setErr(error.message.includes('already registered') ? 'このメールアドレスは既に登録されています。' : `登録に失敗しました: ${error.message}`)
+      setErr(error.message.includes('already registered') ? 'このログインキーは既に使われています。' : `登録に失敗しました: ${error.message}`)
       return
     }
     // 確認メール無効(即セッション)の場合はここで profiles を作成
@@ -73,7 +79,7 @@ export default function Signup() {
         <Card>
           <h1 className="mb-2 text-xl font-extrabold">確認メールを送信しました</h1>
           <p className="text-gray-700">
-            {email} 宛に確認メールを送りました。メール内のリンクを開いた後、ログインしてください。登録情報はログイン後に自動で反映されます。
+            現在のSupabase設定でメール確認が必要になっています。メールなし登録にするには、Supabaseのメール確認をOFFにしてください。
           </p>
           <div className="mt-6">
             <Link to="/login"><Button variant="secondary">ログイン画面へ</Button></Link>
@@ -95,8 +101,14 @@ export default function Signup() {
           <Field label="氏名（ニックネーム不可）">
             <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="山田 太郎" required />
           </Field>
-          <Field label="メールアドレス">
-            <Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Field label="ログインキー">
+            <Input
+              autoComplete="username"
+              value={loginKey}
+              onChange={(e) => setLoginKey(e.target.value)}
+              placeholder="例：yamada2026"
+              required
+            />
           </Field>
           <Field label="パスワード（6文字以上）">
             <Input type="password" autoComplete="new-password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} required />

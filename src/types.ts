@@ -9,6 +9,7 @@ export interface Profile {
   member_type: MemberType
   oyaji_member: boolean
   tshirt_size: string | null
+  tshirt_delivered: boolean
 }
 
 export interface Household {
