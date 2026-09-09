@@ -104,6 +104,14 @@ export default function Signup() {
   return (
     <PlainLayout>
       <h1 className="mb-3 text-xl font-extrabold">新規登録</h1>
+      {!mode && (
+        <Card className="mb-4 border-2 border-brand-yellow bg-yellow-50">
+          <p className="text-center text-sm font-bold text-gray-700">登録前に流れを確認できます</p>
+          <Link to="/guide" className="mt-2 block">
+            <Button type="button" variant="secondary">まず使い方ガイドを開く</Button>
+          </Link>
+        </Card>
+      )}
       <div className="mb-4 rounded-2xl bg-red-50 p-4 text-sm text-gray-800">
         このサイトは<span className="font-bold">おやじ倶楽部</span>が運営しています。おやじ倶楽部に加入していない方でも、
         <span className="font-bold">在園児の保護者</span>であれば登録できます（OBの方も登録可能です）。
@@ -132,9 +140,6 @@ export default function Signup() {
           <p className="mt-6 text-center text-gray-600">
             登録済みの方は{' '}
             <Link to="/login" className="font-bold text-brand-red underline">ログイン</Link>
-          </p>
-          <p className="mt-3 text-center text-sm text-gray-500">
-            <Link to="/guide" className="font-bold text-brand-red underline">使い方ガイドを見る</Link>
           </p>
         </div>
       )}
@@ -206,8 +211,8 @@ export default function Signup() {
         </p>
       )}
       {mode && (
-        <p className="mt-3 text-center text-sm text-gray-500">
-          <Link to="/guide" className="font-bold text-brand-red underline">使い方ガイドを見る</Link>
+        <p className="mt-3 text-center text-sm text-gray-600">
+          <Link to="/guide" className="font-bold text-brand-red underline">使い方ガイドを開く</Link>
         </p>
       )}
     </PlainLayout>

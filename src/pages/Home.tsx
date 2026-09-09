@@ -163,12 +163,12 @@ export default function Home() {
       </section>
 
       <section className="grid grid-cols-2 gap-3">
+        <Tile to="/guide" icon="📖" label="使い方" />
         <Tile to="/annual" icon="📅" label="年間予定" />
         <Tile to="/events" icon="🎪" label="イベント" />
         <Tile to="/news" icon="📢" label="お知らせ" />
         <Tile to="/photos" icon="📷" label="写真" />
         <Tile to="/feedback" icon="✉️" label="ご意見・ご質問" />
-        <Tile to="/guide" icon="📖" label="使い方" />
         <Tile to="/about" icon="🦁" label="おやじ倶楽部について" />
       </section>
     </div>
