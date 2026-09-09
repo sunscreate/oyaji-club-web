@@ -42,7 +42,7 @@ export default function RegisterProfile() {
         setBusy(false)
         if (r.ok) {
           await refresh()
-          nav('/')
+          nav('/home')
         } else {
           setErr(r.message)
         }
@@ -55,7 +55,7 @@ export default function RegisterProfile() {
 
   if (loading) return <Spinner />
   if (session && !needsRegistration) {
-    nav('/')
+    nav('/home')
     return null
   }
 
@@ -70,7 +70,7 @@ export default function RegisterProfile() {
       return
     }
     await refresh()
-    nav('/')
+    nav('/home')
   }
 
   return (

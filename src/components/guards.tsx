@@ -19,6 +19,6 @@ export function RequireStaff({ children }: { children: ReactNode }) {
   if (loading) return <Spinner />
   if (!session) return <Navigate to="/login" replace />
   if (needsRegistration) return <Navigate to="/register" replace />
-  if (!isStaff) return <Navigate to="/" replace />
+  if (!isStaff) return <Navigate to="/home" replace />
   return <>{children}</>
 }

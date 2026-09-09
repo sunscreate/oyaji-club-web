@@ -9,7 +9,7 @@ function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-gray-200 bg-white">
       <div className="mx-auto flex max-w-xl items-center gap-3 px-4 py-2">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/home" className="flex items-center gap-2">
           <img src={logo} alt="おやじ倶楽部" className="h-9 w-auto rounded" />
           <span className="text-base font-extrabold leading-tight">
             さぎぬま幼稚園
@@ -42,7 +42,7 @@ function Header() {
 }
 
 const items = [
-  { to: '/', label: 'ホーム', icon: '🏠', end: true },
+  { to: '/home', label: 'ホーム', icon: '🏠', end: true },
   { to: '/events', label: '予定', icon: '📅', end: false },
   { to: '/photos', label: '写真', icon: '📷', end: false },
   { to: '/mypage', label: 'マイページ', icon: '👤', end: false },

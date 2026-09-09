@@ -32,7 +32,7 @@ export default function Login() {
       )
       return
     }
-    nav('/')
+    nav('/home')
   }
 
   return (

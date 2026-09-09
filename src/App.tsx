@@ -44,13 +44,14 @@ import StaffClasses from './pages/staff/StaffClasses'
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/guide" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/register" element={<RegisterProfile />} />
       <Route path="/guide" element={<Guide />} />
 
       <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
-        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/photos" element={<EventPhotos />} />
@@ -91,7 +92,7 @@ export default function App() {
         <Route path="/staff/classes" element={<StaffClasses />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/guide" replace />} />
     </Routes>
   )
 }

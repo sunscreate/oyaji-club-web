@@ -77,7 +77,7 @@ export default function Signup() {
           <h1 className="mb-2 text-xl font-extrabold text-green-700">登録が完了しました！</h1>
           <p className="text-gray-700">{doneName} さんとして登録されました。このまま利用を始めるか、ログイン画面に戻れます。</p>
           <div className="mt-6 space-y-3">
-            <Button onClick={async () => { await refresh(); nav('/', { replace: true }) }}>このまま始める（ホームへ）</Button>
+            <Button onClick={async () => { await refresh(); nav('/home', { replace: true }) }}>このまま始める（ホームへ）</Button>
             <Button variant="ghost" onClick={async () => { await supabase.auth.signOut(); nav('/login') }}>ログイン画面へ戻る</Button>
           </div>
         </Card>

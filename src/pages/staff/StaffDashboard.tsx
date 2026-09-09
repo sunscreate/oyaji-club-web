@@ -56,7 +56,7 @@ export default function StaffDashboard() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <PageTitle>お世話係</PageTitle>
-        <Link to="/" className="text-sm text-gray-500">一般画面へ →</Link>
+        <Link to="/home" className="text-sm text-gray-500">一般画面へ →</Link>
       </div>
 
       {/* おやじ倶楽部 総予算 */}

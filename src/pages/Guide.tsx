@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { Button, Card } from '../components/ui'
 import logo from '../assets/logo.jpg'
 
@@ -39,6 +40,9 @@ const steps: { title: string; body: string; screen: ScreenKind }[] = [
 ]
 
 export default function Guide() {
+  const { session, needsRegistration, loading } = useAuth()
+  const homePath = needsRegistration ? '/register' : '/home'
+
   return (
     <div className="mx-auto max-w-xl px-4 py-6 print:max-w-none">
       <header className="mb-5 text-center">
@@ -48,8 +52,19 @@ export default function Guide() {
         <p className="mt-2 text-sm text-gray-600">登録からイベント参加、写真、ご意見ご質問までの流れです。</p>
       </header>
 
-      <div className="mb-5 grid grid-cols-2 gap-3 print:hidden">
-        <Link to="/signup"><Button variant="secondary" className="py-3 text-base">新規登録へ</Button></Link>
+      <div className="mb-5 space-y-3 print:hidden">
+        {loading ? (
+          <Button type="button" disabled className="py-3 text-base">確認中…</Button>
+        ) : session ? (
+          <Link to={homePath}>
+            <Button className="py-3 text-base">ホームへ進む</Button>
+          </Link>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <Link to="/login"><Button className="py-3 text-base">ログインへ</Button></Link>
+            <Link to="/signup"><Button variant="secondary" className="py-3 text-base">新規登録へ</Button></Link>
+          </div>
+        )}
         <Button type="button" variant="ghost" className="py-3 text-base" onClick={() => window.print()}>印刷する</Button>
       </div>
 
@@ -75,7 +90,11 @@ export default function Guide() {
       </Card>
 
       <p className="mt-6 text-center text-sm text-gray-500 print:hidden">
-        <Link to="/login" className="font-bold text-brand-red underline">ログイン画面へ戻る</Link>
+        {session ? (
+          <Link to={homePath} className="font-bold text-brand-red underline">ホームへ進む</Link>
+        ) : (
+          <Link to="/login" className="font-bold text-brand-red underline">ログイン画面へ進む</Link>
+        )}
       </p>
     </div>
   )
