@@ -101,7 +101,7 @@ export default function StaffClasses() {
   if (loading) return <Spinner />
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-24">
       <Link to="/staff" className="text-sm text-gray-500">← ダッシュボード</Link>
       <PageTitle>クラス管理</PageTitle>
       <p className="text-sm text-gray-600">子ども登録で選ぶクラスをここで追加・修正できます。</p>
@@ -123,7 +123,7 @@ export default function StaffClasses() {
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={moveClass}>
           <SortableContext items={rows.map((row) => row.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-3">
+            <div className="space-y-3 pb-32">
               {rows.map((row) => (
                 <SortableClassRow
                   key={row.id}
@@ -171,25 +171,28 @@ function SortableClassRow({
     <div ref={setNodeRef} style={style}>
       <Card className={isDragging ? 'opacity-60 shadow-lg' : ''}>
         {editing ? children : (
-          <div className="space-y-3">
+          <div className="flex items-stretch gap-3">
             <button
               type="button"
-              className="flex w-full touch-none items-center gap-3 rounded-xl bg-gray-50 px-3 py-3 text-left active:bg-gray-100"
+              className="flex w-16 shrink-0 touch-none flex-col items-center justify-center gap-2 rounded-xl bg-gray-50 px-2 py-4 text-gray-500 active:bg-gray-100"
               aria-label={`${row.grade} ${row.name}を並び替え`}
               {...attributes}
               {...listeners}
             >
-              <span className="rounded-lg bg-white px-3 py-2 text-lg font-extrabold text-gray-500 shadow-sm">≡</span>
-              <span className="flex-1">
-                <span className="block text-lg font-extrabold">{row.year}年度 {row.grade} {row.name}</span>
-                <span className="block text-xs text-gray-500">ここを長押ししてドラッグ</span>
-              </span>
+              <span className="text-2xl font-extrabold leading-none">≡</span>
+              <span className="[writing-mode:vertical-rl] text-xs font-bold tracking-widest">ドラッグ</span>
             </button>
-            <div className="grid grid-cols-4 gap-2">
-              <button type="button" onClick={onMoveUp} disabled={first} className="rounded-lg border border-gray-300 bg-white py-2 text-sm font-bold text-gray-700 disabled:opacity-30">上へ</button>
-              <button type="button" onClick={onMoveDown} disabled={last} className="rounded-lg border border-gray-300 bg-white py-2 text-sm font-bold text-gray-700 disabled:opacity-30">下へ</button>
-              <button type="button" onClick={onEdit} className="rounded-lg bg-red-50 py-2 text-sm font-bold text-brand-red">編集</button>
-              <button type="button" onClick={onRemove} className="rounded-lg bg-gray-100 py-2 text-sm font-bold text-gray-500">削除</button>
+            <div className="min-w-0 flex-1 space-y-3">
+              <div>
+                <p className="text-lg font-extrabold">{row.year}年度 {row.grade} {row.name}</p>
+                <p className="text-xs text-gray-500">左のつまみを長押ししてドラッグ</p>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                <button type="button" onClick={onMoveUp} disabled={first} className="rounded-lg border border-gray-300 bg-white py-2 text-sm font-bold text-gray-700 disabled:opacity-30">上へ</button>
+                <button type="button" onClick={onMoveDown} disabled={last} className="rounded-lg border border-gray-300 bg-white py-2 text-sm font-bold text-gray-700 disabled:opacity-30">下へ</button>
+                <button type="button" onClick={onEdit} className="rounded-lg bg-red-50 py-2 text-sm font-bold text-brand-red">編集</button>
+                <button type="button" onClick={onRemove} className="rounded-lg bg-gray-100 py-2 text-sm font-bold text-gray-500">削除</button>
+              </div>
             </div>
           </div>
         )}
