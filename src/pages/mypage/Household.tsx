@@ -12,7 +12,7 @@ export default function Household() {
   const [invite, setInvite] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'copied' | 'failed'>('idle')
   const [copyMode, setCopyMode] = useState<'code' | 'message'>('message')
   const copyTextRef = useRef<HTMLTextAreaElement>(null)
   const signupUrl = `${window.location.origin}${import.meta.env.BASE_URL}#/signup`
@@ -77,24 +77,34 @@ export default function Household() {
     return ok
   }
 
+  function withTimeout<T>(promise: Promise<T>, ms: number) {
+    return Promise.race([
+      promise,
+      new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('copy timeout')), ms)),
+    ])
+  }
+
   async function copy() {
-    setCopyStatus('idle')
+    setCopyStatus('copying')
+    let copied = false
     try {
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(copyText)
-      } else if (!copyWithFallback(copyText)) {
-        throw new Error('copy failed')
+        await withTimeout(navigator.clipboard.writeText(copyText), 800)
+        copied = true
       }
+    } catch { /* fallback below */ }
+
+    if (!copied) {
+      try {
+        copied = copyWithFallback(copyText)
+      } catch { /* show failure below */ }
+    }
+
+    if (copied) {
       setCopyStatus('copied')
       setTimeout(() => setCopyStatus('idle'), 1800)
-    } catch {
-      try {
-        if (!copyWithFallback(copyText)) throw new Error('copy failed')
-        setCopyStatus('copied')
-        setTimeout(() => setCopyStatus('idle'), 1800)
-      } catch {
-        setCopyStatus('failed')
-      }
+    } else {
+      setCopyStatus('failed')
     }
   }
 
@@ -166,8 +176,13 @@ export default function Household() {
               className="h-36 w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-sm font-bold leading-relaxed text-gray-800"
             />
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={copy} className="rounded-xl bg-brand-yellow px-4 py-3 font-bold">
-                {copyStatus === 'copied' ? 'コピー済' : 'コピーする'}
+              <button
+                type="button"
+                onClick={copy}
+                disabled={copyStatus === 'copying'}
+                className="rounded-xl bg-brand-yellow px-4 py-3 font-bold disabled:opacity-60"
+              >
+                {copyStatus === 'copying' ? 'コピー中…' : copyStatus === 'copied' ? 'コピー済' : 'コピーする'}
               </button>
               {'share' in navigator ? (
                 <button type="button" onClick={share} className="rounded-xl bg-brand-red px-4 py-3 font-bold text-white">共有する</button>
@@ -175,6 +190,7 @@ export default function Household() {
                 <button type="button" onClick={selectCopyText} className="rounded-xl border border-gray-300 bg-white px-4 py-3 font-bold text-gray-700">選択する</button>
               )}
             </div>
+            {copyStatus === 'copying' && <p className="text-center text-sm font-bold text-gray-500">コピーしています…</p>}
             {copyStatus === 'copied' && <p className="text-center text-sm font-bold text-green-600">コピーしました</p>}
             {copyStatus === 'failed' && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-brand-red">自動コピーできませんでした。上の文章を長押ししてコピーしてください。</p>}
           </div>
