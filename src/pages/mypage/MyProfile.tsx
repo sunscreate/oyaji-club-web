@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -26,16 +26,18 @@ export default function MyProfile() {
     }
   }, [profile])
 
-  async function save(e: React.FormEvent) {
+  async function save(e: FormEvent) {
     e.preventDefault()
+    const newlyJoinedOyaji = !profile?.oyaji_member && oyaji
+    if (newlyJoinedOyaji && !size) return
     setBusy(true)
     setSaved(false)
-    const newlyJoinedOyaji = !profile?.oyaji_member && oyaji
     await supabase.from('profiles').update({
       full_name: fullName.trim(),
       member_type: memberType,
       oyaji_member: oyaji,
-      tshirt_size: oyaji ? (size || null) : null,
+      tshirt_size: newlyJoinedOyaji ? (size || null) : profile?.oyaji_member ? profile.tshirt_size : null,
+      tshirt_delivered: newlyJoinedOyaji ? false : profile?.oyaji_member ? profile.tshirt_delivered : false,
     }).eq('id', profile!.id)
     await refresh()
     setBusy(false)
@@ -67,15 +69,19 @@ export default function MyProfile() {
             <p className="mt-2 text-sm leading-relaxed text-gray-600">
               おやじ倶楽部への入会はパパのみです。入会しなくても、イベント参加やサイトの利用はできます。
             </p>
-            {oyaji && (
+            {!profile?.oyaji_member && oyaji && (
               <div className="mt-3">
                 <Field label="Tシャツサイズ">
-                  <Select value={size} onChange={(e) => setSize(e.target.value)}>
+                  <Select value={size} onChange={(e) => setSize(e.target.value)} required>
                     <option value="">選択してください</option>
                     {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
                   </Select>
                 </Field>
+                <p className="mt-2 text-sm text-gray-600">新規入会の方のみ、次回イベント時にお渡しするTシャツサイズを選択してください。</p>
               </div>
+            )}
+            {profile?.oyaji_member && oyaji && (
+              <p className="mt-3 rounded-lg bg-white px-3 py-2 text-sm font-bold text-gray-700">現在加盟済みの方は、Tシャツをお持ちの前提で扱います。</p>
             )}
           </div>
 

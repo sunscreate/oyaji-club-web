@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { completeRegistration } from '../lib/register'
@@ -6,6 +6,7 @@ import { PlainLayout } from '../components/Layout'
 import { Button, Card, ErrorText, Field, Input, Select, Spinner } from '../components/ui'
 import type { MemberType } from '../types'
 
+type OyajiStatus = 'none' | 'current' | 'new'
 const TSHIRT_SIZES = ['S', 'M', 'L', 'XL']
 
 /** 認証済だが profiles 未作成のとき、園コード/招待コードで登録を完了する画面。 */
@@ -17,7 +18,7 @@ export default function RegisterProfile() {
   const [mode, setMode] = useState<'new' | 'join'>('new')
   const [householdName, setHouseholdName] = useState('')
   const [code, setCode] = useState('')
-  const [oyajiMember, setOyajiMember] = useState(false)
+  const [oyajiStatus, setOyajiStatus] = useState<OyajiStatus>('none')
   const [tshirtSize, setTshirtSize] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
@@ -32,7 +33,8 @@ export default function RegisterProfile() {
     if (meta.mode) setMode(meta.mode)
     if (meta.household_name) setHouseholdName(meta.household_name)
     if (meta.code) setCode(meta.code)
-    if (meta.oyaji_member) setOyajiMember(!!meta.oyaji_member)
+    if (meta.oyaji_status) setOyajiStatus(meta.oyaji_status)
+    else if (meta.oyaji_member) setOyajiStatus(meta.tshirt_size ? 'new' : 'current')
     if (meta.tshirt_size) setTshirtSize(meta.tshirt_size)
     if (meta.full_name && meta.code) {
       setTried(true)
@@ -44,6 +46,7 @@ export default function RegisterProfile() {
           mode: meta.mode ?? 'new',
           household_name: meta.household_name,
           code: meta.code,
+          oyaji_status: meta.oyaji_status ?? (meta.oyaji_member ? (meta.tshirt_size ? 'new' : 'current') : 'none'),
           oyaji_member: !!meta.oyaji_member,
           tshirt_size: meta.tshirt_size,
         })
@@ -67,9 +70,13 @@ export default function RegisterProfile() {
     return null
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setErr('')
+    if (oyajiStatus === 'new' && !tshirtSize) {
+      setErr('新規加盟する場合はTシャツサイズを選択してください。')
+      return
+    }
     setBusy(true)
     const r = await completeRegistration({
       full_name: fullName.trim(),
@@ -77,8 +84,9 @@ export default function RegisterProfile() {
       mode,
       household_name: householdName.trim(),
       code: code.trim(),
-      oyaji_member: oyajiMember,
-      tshirt_size: tshirtSize,
+      oyaji_status: oyajiStatus,
+      oyaji_member: oyajiStatus !== 'none',
+      tshirt_size: oyajiStatus === 'new' ? tshirtSize : '',
     })
     setBusy(false)
     if (!r.ok) {
@@ -104,15 +112,23 @@ export default function RegisterProfile() {
               <option value="ob">OB家庭</option>
             </Select>
           </Field>
-          <div className="rounded-xl bg-gray-50 p-3">
-            <button type="button" onClick={() => setOyajiMember(!oyajiMember)} className="flex w-full items-center gap-3 text-left">
-              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${oyajiMember ? 'border-brand-red bg-brand-red text-white' : 'border-gray-300 bg-white'}`}>{oyajiMember ? '✓' : ''}</span>
-              <span className="font-bold">現在、おやじ倶楽部に加盟しています</span>
-            </button>
-            <p className="mt-2 text-sm leading-relaxed text-gray-600">
-              パパで、すでにおやじ倶楽部に加盟している方だけチェックしてください。加盟していなくても登録できます。
+          <div className="space-y-3 rounded-xl bg-gray-50 p-3">
+            <p className="text-sm font-extrabold text-gray-700">おやじ倶楽部への加盟状況</p>
+            <OyajiStatusButton active={oyajiStatus === 'none'} onClick={() => { setOyajiStatus('none'); setTshirtSize('') }}>
+              未加盟・サイトだけ利用する
+            </OyajiStatusButton>
+            <OyajiStatusButton active={oyajiStatus === 'current'} onClick={() => { setOyajiStatus('current'); setTshirtSize('') }}>
+              現在加盟済み
+              <span className="mt-1 block text-xs font-normal text-gray-600">すでにTシャツを持っている方</span>
+            </OyajiStatusButton>
+            <OyajiStatusButton active={oyajiStatus === 'new'} onClick={() => setOyajiStatus('new')}>
+              新規加盟する
+              <span className="mt-1 block text-xs font-normal text-gray-600">これから加盟し、Tシャツを受け取る方</span>
+            </OyajiStatusButton>
+            <p className="text-sm leading-relaxed text-gray-600">
+              おやじ倶楽部への加盟はパパのみです。加盟していなくても、イベント参加やサイトの利用はできます。
             </p>
-            {oyajiMember && (
+            {oyajiStatus === 'new' && (
               <div className="mt-3">
                 <Field label="Tシャツサイズ">
                   <Select value={tshirtSize} onChange={(e) => setTshirtSize(e.target.value)}>
@@ -146,5 +162,17 @@ export default function RegisterProfile() {
         </form>
       </Card>
     </PlainLayout>
+  )
+}
+
+function OyajiStatusButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`block w-full rounded-xl border-2 px-4 py-3 text-left font-bold ${active ? 'border-brand-red bg-white text-brand-red' : 'border-gray-200 bg-white text-gray-700'}`}
+    >
+      {children}
+    </button>
   )
 }

@@ -7,6 +7,7 @@ export interface RegMeta {
   mode: 'new' | 'join'
   household_name?: string
   code: string
+  oyaji_status?: 'none' | 'current' | 'new'
   oyaji_member?: boolean
   tshirt_size?: string
 }
@@ -21,6 +22,8 @@ const MSG: Record<string, string> = {
 
 export async function completeRegistration(m: RegMeta): Promise<{ ok: boolean; message: string }> {
   if (!m.full_name || !m.code) return { ok: false, message: '氏名とコードを入力してください。' }
+  const oyajiStatus = m.oyaji_status ?? (m.oyaji_member ? (m.tshirt_size ? 'new' : 'current') : 'none')
+  if (oyajiStatus === 'new' && !m.tshirt_size) return { ok: false, message: '新規加盟する場合はTシャツサイズを選択してください。' }
   const rpc =
     m.mode === 'join'
       ? supabase.rpc('join_household', {
@@ -42,8 +45,9 @@ export async function completeRegistration(m: RegMeta): Promise<{ ok: boolean; m
   const { data: auth } = await supabase.auth.getUser()
   if (auth.user) {
     const { error: updateError } = await supabase.from('profiles').update({
-      oyaji_member: !!m.oyaji_member,
-      tshirt_size: m.oyaji_member ? (m.tshirt_size || null) : null,
+      oyaji_member: oyajiStatus !== 'none',
+      tshirt_size: oyajiStatus === 'new' ? (m.tshirt_size || null) : null,
+      tshirt_delivered: oyajiStatus === 'current',
     }).eq('id', auth.user.id)
     if (updateError) return { ok: false, message: `加盟情報の保存に失敗しました: ${updateError.message}` }
   }
