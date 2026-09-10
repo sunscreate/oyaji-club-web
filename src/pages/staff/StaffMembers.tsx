@@ -11,6 +11,7 @@ interface HouseholdGroup { key: string; name: string; members: P[] }
 export default function StaffMembers() {
   const { isOwner, isPresident, profile } = useAuth()
   const canDelete = isOwner || isPresident
+  const canManageMembership = isOwner || isPresident
   const [profiles, setProfiles] = useState<P[]>([])
   const [households, setHouseholds] = useState<Record<string, string>>({})
   const [roleMap, setRoleMap] = useState<Record<string, RoleType[]>>({})
@@ -49,6 +50,18 @@ export default function StaffMembers() {
       return
     }
     await load()
+  }
+
+  async function toggleOyaji(row: P) {
+    setBusy(true); setErr('')
+    const joined = !row.oyaji_member
+    const { error } = await supabase.rpc('set_oyaji_membership', { p_target: row.id, p_joined: joined })
+    setBusy(false)
+    if (error) {
+      setErr(error.message.includes('forbidden') ? '加盟状態を変更する権限がありません。' : `加盟状態の変更に失敗しました: ${error.message}`)
+      return
+    }
+    setProfiles((cur) => cur.map((p) => p.id === row.id ? { ...p, oyaji_member: joined } : p))
   }
 
   if (loading) return <Spinner />
@@ -111,14 +124,24 @@ export default function StaffMembers() {
                         </div>
                         <div className="mt-2 flex items-center gap-2">
                           <RoleBadges roles={roles} />
+                          {canManageMembership && (
+                            <button
+                              type="button"
+                              onClick={() => toggleOyaji(p)}
+                              disabled={busy}
+                              className={`ml-auto rounded-lg px-3 py-1.5 text-sm font-bold disabled:opacity-50 ${p.oyaji_member ? 'bg-gray-100 text-gray-500' : 'bg-brand-red text-white'}`}
+                            >
+                              {p.oyaji_member ? '未加盟に戻す' : '加盟にする'}
+                            </button>
+                          )}
                           {canDelete && p.id !== profile?.id && !roles.includes('site_owner') && (
                             confirmId === p.id ? (
-                              <span className="ml-auto flex items-center gap-2">
+                              <span className="flex items-center gap-2">
                                 <button onClick={() => del(p.id)} disabled={busy} className="rounded-lg bg-brand-red px-3 py-1.5 text-sm font-bold text-white">本当に削除</button>
                                 <button onClick={() => setConfirmId(null)} className="text-sm text-gray-500">やめる</button>
                               </span>
                             ) : (
-                              <button onClick={() => setConfirmId(p.id)} className="ml-auto text-sm text-gray-400">アカウント削除</button>
+                              <button onClick={() => setConfirmId(p.id)} className="text-sm text-gray-400">アカウント削除</button>
                             )
                           )}
                         </div>
