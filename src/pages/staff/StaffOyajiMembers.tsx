@@ -48,7 +48,8 @@ export default function StaffOyajiMembers() {
   if (loading) return <Spinner />
 
   const isNew = (r: Row) => r.oyaji_joined_at && now - new Date(r.oyaji_joined_at).getTime() < NEW_DAYS * 86400000
-  const newbies = rows.filter(isNew)
+  const needsTshirtDelivery = (r: Row) => isNew(r) && !r.tshirt_delivered
+  const newbies = rows.filter(needsTshirtDelivery)
   const counts: Record<string, number> = {}
   rows.forEach((r) => { if (r.tshirt_size) counts[r.tshirt_size] = (counts[r.tshirt_size] ?? 0) + 1 })
   const max = Math.max(1, ...SIZES.map((s) => counts[s] ?? 0))
@@ -92,7 +93,7 @@ export default function StaffOyajiMembers() {
               <div key={r.id} className="px-4 py-3">
                 <div className="flex items-center gap-3">
                   <span className="font-bold">{r.full_name}</span>
-                  {isNew(r) && <span className="rounded-full bg-brand-red px-2 py-0.5 text-xs font-bold text-white">NEW</span>}
+                  {needsTshirtDelivery(r) && <span className="rounded-full bg-brand-red px-2 py-0.5 text-xs font-bold text-white">NEW</span>}
                   <span className="ml-auto rounded-full bg-gray-100 px-3 py-1 text-sm font-bold">{r.tshirt_size ?? '未設定'}</span>
                   {r.oyaji_joined_at && <span className="w-20 shrink-0 text-right text-xs text-gray-400">{new Date(r.oyaji_joined_at).toLocaleDateString('ja-JP')}</span>}
                 </div>
