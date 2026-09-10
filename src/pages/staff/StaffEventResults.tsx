@@ -42,6 +42,7 @@ export default function StaffEventResults() {
   const households = entries.filter((e) => e.kind === 'household').length
   const guests = entries.filter((e) => e.kind === 'guest').length
   const people = entries.reduce((s, e) => s + e.adults + e.children, 0)
+  const hasFee = event.fee_type !== 'none'
   const income = entries.filter((e) => e.record?.paid).reduce((s, e) => s + (e.record?.amount_actual ?? e.normal), 0)
   const balance = income - expense
 
@@ -57,13 +58,15 @@ export default function StaffEventResults() {
         <div className="grid grid-cols-2 gap-2 text-center">
           <M label="参加世帯" value={`${households}世帯`} />
           <M label="参加人数" value={`${people}人`} />
-          <M label="参加費収入" value={yen(income)} />
+          <M label={hasFee ? '参加費収入' : '参加費'} value={hasFee ? yen(income) : 'なし'} />
           <M label="支出" value={yen(expense)} />
         </div>
-        <div className={`mt-3 rounded-xl p-3 text-center ${balance < 0 ? 'bg-red-50' : 'bg-green-50'}`}>
-          <p className="text-sm text-gray-500">収支</p>
-          <p className={`text-2xl font-extrabold ${balance < 0 ? 'text-brand-red' : 'text-green-700'}`}>{balance >= 0 ? '+' : ''}{yen(balance)}</p>
-        </div>
+        {hasFee && (
+          <div className={`mt-3 rounded-xl p-3 text-center ${balance < 0 ? 'bg-red-50' : 'bg-green-50'}`}>
+            <p className="text-sm text-gray-500">収支</p>
+            <p className={`text-2xl font-extrabold ${balance < 0 ? 'text-brand-red' : 'text-green-700'}`}>{balance >= 0 ? '+' : ''}{yen(balance)}</p>
+          </div>
+        )}
         {guests > 0 && <p className="mt-2 text-center text-sm text-gray-500">（うちゲスト {guests}件）</p>}
       </Card>
 

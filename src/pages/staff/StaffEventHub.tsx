@@ -21,14 +21,17 @@ export default function StaffEventHub() {
   if (loading) return <Spinner />
   if (!event) return <Card><p>イベントが見つかりません。</p></Card>
 
+  const hasFee = event.fee_type !== 'none'
   const tiles = [
     { to: `/staff/events/${id}/participants`, icon: '👨‍👩‍👧', label: '参加状況' },
     { to: `/staff/events/${id}/prep`, icon: '🛒', label: '準備・買い物' },
     { to: `/staff/events/${id}/receipts`, icon: '🧾', label: '立替精算' },
-    { to: `/staff/events/${id}/reception`, icon: '✅', label: '当日受付' },
-    { to: `/staff/events/${id}/accounting`, icon: '💰', label: '当日会計' },
+    ...(hasFee ? [
+      { to: `/staff/events/${id}/reception`, icon: '✅', label: '当日受付' },
+      { to: `/staff/events/${id}/accounting`, icon: '💰', label: '当日会計' },
+    ] : []),
     { to: `/staff/events/${id}/survey`, icon: '📝', label: 'アンケート' },
-    { to: `/staff/events/${id}/results`, icon: '📊', label: '実績・収支' },
+    { to: `/staff/events/${id}/results`, icon: '📊', label: hasFee ? '実績・収支' : '実績' },
     { to: `/staff/events/${id}/edit`, icon: '✏️', label: 'イベント編集' },
   ]
 

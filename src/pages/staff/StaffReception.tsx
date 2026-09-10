@@ -65,6 +65,19 @@ export default function StaffReception() {
   }
 
   if (loading) return <Spinner />
+  if (event?.fee_type === 'none') {
+    return (
+      <div className="space-y-4">
+        <Link to={`/staff/events/${id}`} className="text-sm text-gray-500">← イベント管理</Link>
+        <PageTitle>参加名簿</PageTitle>
+        <Card>
+          <p className="font-extrabold">このイベントは参加費なしです。</p>
+          <p className="mt-2 text-sm text-gray-600">受付・集金の集計は行わず、参加者の名簿だけ確認してください。</p>
+          <Link to={`/staff/events/${id}/participants`} className="mt-4 block rounded-xl bg-brand-red px-4 py-3 text-center font-bold text-white">参加名簿を見る</Link>
+        </Card>
+      </div>
+    )
+  }
 
   const receivedCount = entries.filter((e) => e.record?.received).length
   const paidEntries = entries.filter((e) => e.record?.paid)

@@ -3,17 +3,20 @@ import { Link, useParams } from 'react-router-dom'
 import { loadRoster, upsertDayRecord, type RosterEntry } from '../../lib/roster'
 import { yen } from '../../lib/fee'
 import { Card, PageTitle, Select, Spinner } from '../../components/ui'
+import type { EventRow } from '../../types'
 
 const REASONS = ['食材不足', '遅れて参加', '一部のみ参加', 'その他']
 
 export default function StaffAccounting() {
   const { id } = useParams<{ id: string }>()
+  const [event, setEvent] = useState<EventRow | null>(null)
   const [entries, setEntries] = useState<RosterEntry[]>([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     if (!id) return
-    const { entries } = await loadRoster(id)
+    const { event, entries } = await loadRoster(id)
+    setEvent(event)
     setEntries(entries)
     setLoading(false)
   }, [id])
@@ -21,6 +24,19 @@ export default function StaffAccounting() {
   useEffect(() => { load() }, [load])
 
   if (loading) return <Spinner />
+  if (event?.fee_type === 'none') {
+    return (
+      <div className="space-y-4">
+        <Link to={`/staff/events/${id}`} className="text-sm text-gray-500">← イベント管理</Link>
+        <PageTitle>当日会計</PageTitle>
+        <Card>
+          <p className="font-extrabold">このイベントは参加費なしです。</p>
+          <p className="mt-2 text-sm text-gray-600">当日の集金集計は不要です。参加者は名簿で確認できます。</p>
+          <Link to={`/staff/events/${id}/participants`} className="mt-4 block rounded-xl bg-brand-red px-4 py-3 text-center font-bold text-white">参加名簿を見る</Link>
+        </Card>
+      </div>
+    )
+  }
 
   const paid = entries.filter((e) => e.record?.paid)
   const normalBase = paid.reduce((s, e) => s + e.normal, 0)

@@ -179,6 +179,7 @@ export default function EventDetail() {
 }
 
 function feeText(feeType: string, cfg: FeeConfig): string | null {
+  if (feeType === 'none') return feeLabel(feeType, cfg)
   const has = (cfg?.household ?? 0) > 0 || (cfg?.adult ?? 0) > 0 || (cfg?.child ?? 0) > 0
   return has ? feeLabel(feeType, cfg) : null
 }

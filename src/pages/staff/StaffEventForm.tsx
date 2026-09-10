@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { processImage } from '../../lib/imageCompress'
 import { Button, Card, ErrorText, Field, Input, PageTitle, Select, Spinner, Textarea } from '../../components/ui'
 import type { EventRow } from '../../types'
+import type { FeeType } from '../../lib/fee'
 
 const TIME_OPTIONS = (() => {
   const a: string[] = ['']
@@ -29,7 +30,7 @@ export default function StaffEventForm() {
     target: 'both', attendance_enabled: true, is_annual: false, belongings: '', rain_info: '', notes: '',
     photos_enabled: true, survey_enabled: false,
   })
-  const [feeType, setFeeType] = useState<'household' | 'per_person'>('household')
+  const [feeType, setFeeType] = useState<FeeType>('household')
   const [feeHousehold, setFeeHousehold] = useState('')
   const [feeAdult, setFeeAdult] = useState('')
   const [feeChild, setFeeChild] = useState('')
@@ -53,7 +54,7 @@ export default function StaffEventForm() {
           photos_enabled: e.photos_enabled, survey_enabled: e.survey_enabled,
         })
         const cfg = (e.fee_config ?? {}) as { household?: number; adult?: number; child?: number }
-        setFeeType(e.fee_type === 'per_person' ? 'per_person' : 'household')
+        setFeeType(e.fee_type === 'none' ? 'none' : e.fee_type === 'per_person' ? 'per_person' : 'household')
         setFeeHousehold(cfg.household != null ? String(cfg.household) : '')
         setFeeAdult(cfg.adult != null ? String(cfg.adult) : '')
         setFeeChild(cfg.child != null ? String(cfg.child) : '')
@@ -88,7 +89,9 @@ export default function StaffEventForm() {
     if (!f.title.trim() || !f.event_date) { setErr('イベント名と開催日は必須です。'); return }
     setBusy(true)
     try {
-      const fee_config = feeType === 'per_person'
+      const fee_config = feeType === 'none'
+        ? {}
+        : feeType === 'per_person'
         ? { adult: Number(feeAdult) || 0, child: Number(feeChild) || 0 }
         : { household: Number(feeHousehold) || 0 }
       const payload = {
@@ -209,11 +212,14 @@ export default function StaffEventForm() {
 
           <div className="rounded-xl bg-gray-50 p-3">
             <p className="mb-2 text-sm font-bold text-gray-700">参加費</p>
-            <Select value={feeType} onChange={(e) => setFeeType(e.target.value as 'household' | 'per_person')}>
+            <Select value={feeType} onChange={(e) => setFeeType(e.target.value as FeeType)}>
+              <option value="none">参加費を取らない</option>
               <option value="household">1世帯あたり</option>
               <option value="per_person">大人・子ども別</option>
             </Select>
-            {feeType === 'household' ? (
+            {feeType === 'none' ? (
+              <p className="mt-2 rounded-lg bg-white px-3 py-2 text-sm font-bold text-gray-600">このイベントは参加費なしとして扱います。受付・集金の集計は行いません。</p>
+            ) : feeType === 'household' ? (
               <div className="mt-2">
                 <Field label="1世帯の金額（円）">
                   <Input type="number" inputMode="numeric" value={feeHousehold} onChange={(e) => setFeeHousehold(e.target.value)} placeholder="500" />

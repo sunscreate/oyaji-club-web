@@ -110,7 +110,11 @@ export default function StaffDashboard() {
       <section className="grid grid-cols-2 gap-3">
         <Tile to="/staff/events" icon="🎪" label="イベント管理" />
         <Tile to="/staff/events/new" icon="➕" label="イベント作成" />
-        {next ? <Tile to={`/staff/events/${next.id}/reception`} icon="✅" label="当日受付・集金" /> : <Tile to="/staff/events" icon="✅" label="当日受付・集金" sub="イベントを選択" />}
+        {next ? (
+          next.fee_type === 'none'
+            ? <Tile to={`/staff/events/${next.id}/participants`} icon="📋" label="参加名簿" sub="参加費なし" />
+            : <Tile to={`/staff/events/${next.id}/reception`} icon="✅" label="当日受付・集金" />
+        ) : <Tile to="/staff/events" icon="✅" label="当日受付・集金" sub="イベントを選択" />}
         {next ? <Tile to={`/staff/events/${next.id}/prep`} icon="🛒" label="準備・買い物" /> : <Tile to="/staff/events" icon="🛒" label="準備・買い物" sub="イベントを選択" />}
         <Tile to="/staff/oyaji" icon="🦁" label="加盟者名簿" />
         <Tile to="/staff/members" icon="📇" label="アカウント名簿" />
