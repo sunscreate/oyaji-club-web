@@ -190,8 +190,8 @@ export default function Feedback() {
       {view === 'mine' && (
         <div className="space-y-3">
           {done && (
-            <Card>
-              <p className="font-bold text-green-700">送信しました。ありがとうございます！</p>
+            <Card className="border-2 border-green-100 bg-green-50">
+              <p className="text-lg font-extrabold text-green-700">送信しました。ありがとうございます！</p>
               <p className="mt-2 text-sm text-gray-600">返信があると、この画面で続けてやりとりできます。</p>
             </Card>
           )}
