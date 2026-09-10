@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext'
 import type { MemberType } from '../types'
 
 type Mode = 'new' | 'join'
+const TSHIRT_SIZES = ['S', 'M', 'L', 'XL']
 
 export default function Signup() {
   const [fullName, setFullName] = useState('')
@@ -17,6 +18,8 @@ export default function Signup() {
   const [mode, setMode] = useState<Mode | null>(null)
   const [householdName, setHouseholdName] = useState('')
   const [code, setCode] = useState('')
+  const [oyajiMember, setOyajiMember] = useState(false)
+  const [tshirtSize, setTshirtSize] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [sent, setSent] = useState(false)
@@ -43,6 +46,8 @@ export default function Signup() {
       mode,
       household_name: householdName.trim(),
       code: code.trim(),
+      oyaji_member: oyajiMember,
+      tshirt_size: tshirtSize,
     }
     const { data, error } = await supabase.auth.signUp({
       email: await personNameToEmail(fullName),
@@ -182,6 +187,25 @@ export default function Signup() {
                   <option value="ob">OB家庭</option>
                 </Select>
               </Field>
+              <div className="rounded-xl bg-gray-50 p-3">
+                <button type="button" onClick={() => setOyajiMember(!oyajiMember)} className="flex w-full items-center gap-3 text-left">
+                  <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${oyajiMember ? 'border-brand-red bg-brand-red text-white' : 'border-gray-300 bg-white'}`}>{oyajiMember ? '✓' : ''}</span>
+                  <span className="font-bold">現在、おやじ倶楽部に加盟しています</span>
+                </button>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                  パパで、すでにおやじ倶楽部に加盟している方だけチェックしてください。加盟していなくても登録できます。
+                </p>
+                {oyajiMember && (
+                  <div className="mt-3">
+                    <Field label="Tシャツサイズ">
+                      <Select value={tshirtSize} onChange={(e) => setTshirtSize(e.target.value)}>
+                        <option value="">選択してください</option>
+                        {TSHIRT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </Select>
+                    </Field>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-3 border-t border-gray-100 pt-4">

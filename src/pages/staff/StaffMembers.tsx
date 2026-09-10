@@ -54,7 +54,7 @@ export default function StaffMembers() {
   if (loading) return <Spinner />
 
   const allGroups = groupByHousehold(profiles, households)
-  const joinedHouseholds = allGroups.filter((g) => g.members.some((p) => p.oyaji_member)).length
+  const joinedHouseholds = allGroups.filter((g) => g.members.some((p) => isJoinedOyaji(p, roleMap[p.id] ?? []))).length
   const filtered = profiles.filter((p) => {
     const keyword = q.trim()
     if (!keyword) return true
@@ -81,7 +81,7 @@ export default function StaffMembers() {
       {filteredGroups.length === 0 ? <EmptyState>該当なし</EmptyState> : (
         <div className="space-y-2">
           {filteredGroups.map((group) => {
-            const joined = group.members.some((p) => p.oyaji_member)
+            const joined = group.members.some((p) => isJoinedOyaji(p, roleMap[p.id] ?? []))
             return (
               <Card key={group.key}>
                 <div className="mb-3 flex items-center gap-2">
@@ -105,7 +105,7 @@ export default function StaffMembers() {
                             </p>
                             <p className="text-xs text-gray-500">{p.member_type === 'ob' ? 'OB' : '在園'}</p>
                           </div>
-                          {p.oyaji_member
+                          {isJoinedOyaji(p, roles)
                             ? <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-brand-red">加盟</span>
                             : <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-bold text-gray-500">未加盟</span>}
                         </div>
@@ -145,4 +145,8 @@ function groupByHousehold(rows: P[], households: Record<string, string>): Househ
     groups.get(key)!.members.push(p)
   })
   return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+}
+
+function isJoinedOyaji(profile: P, roles: RoleType[]) {
+  return profile.oyaji_member || roles.includes('site_owner') || roles.includes('president')
 }

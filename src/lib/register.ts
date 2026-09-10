@@ -7,6 +7,8 @@ export interface RegMeta {
   mode: 'new' | 'join'
   household_name?: string
   code: string
+  oyaji_member?: boolean
+  tshirt_size?: string
 }
 
 const MSG: Record<string, string> = {
@@ -36,6 +38,14 @@ export async function completeRegistration(m: RegMeta): Promise<{ ok: boolean; m
   if (error) {
     const key = Object.keys(MSG).find((k) => error.message.includes(k))
     return { ok: false, message: key ? MSG[key] : `登録に失敗しました: ${error.message}` }
+  }
+  const { data: auth } = await supabase.auth.getUser()
+  if (auth.user) {
+    const { error: updateError } = await supabase.from('profiles').update({
+      oyaji_member: !!m.oyaji_member,
+      tshirt_size: m.oyaji_member ? (m.tshirt_size || null) : null,
+    }).eq('id', auth.user.id)
+    if (updateError) return { ok: false, message: `加盟情報の保存に失敗しました: ${updateError.message}` }
   }
   return { ok: true, message: '' }
 }

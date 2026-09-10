@@ -6,6 +6,8 @@ import { PlainLayout } from '../components/Layout'
 import { Button, Card, ErrorText, Field, Input, Select, Spinner } from '../components/ui'
 import type { MemberType } from '../types'
 
+const TSHIRT_SIZES = ['S', 'M', 'L', 'XL']
+
 /** 認証済だが profiles 未作成のとき、園コード/招待コードで登録を完了する画面。 */
 export default function RegisterProfile() {
   const { session, needsRegistration, loading, refresh } = useAuth()
@@ -15,6 +17,8 @@ export default function RegisterProfile() {
   const [mode, setMode] = useState<'new' | 'join'>('new')
   const [householdName, setHouseholdName] = useState('')
   const [code, setCode] = useState('')
+  const [oyajiMember, setOyajiMember] = useState(false)
+  const [tshirtSize, setTshirtSize] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [tried, setTried] = useState(false)
@@ -28,6 +32,8 @@ export default function RegisterProfile() {
     if (meta.mode) setMode(meta.mode)
     if (meta.household_name) setHouseholdName(meta.household_name)
     if (meta.code) setCode(meta.code)
+    if (meta.oyaji_member) setOyajiMember(!!meta.oyaji_member)
+    if (meta.tshirt_size) setTshirtSize(meta.tshirt_size)
     if (meta.full_name && meta.code) {
       setTried(true)
       ;(async () => {
@@ -38,6 +44,8 @@ export default function RegisterProfile() {
           mode: meta.mode ?? 'new',
           household_name: meta.household_name,
           code: meta.code,
+          oyaji_member: !!meta.oyaji_member,
+          tshirt_size: meta.tshirt_size,
         })
         setBusy(false)
         if (r.ok) {
@@ -63,7 +71,15 @@ export default function RegisterProfile() {
     e.preventDefault()
     setErr('')
     setBusy(true)
-    const r = await completeRegistration({ full_name: fullName.trim(), member_type: memberType, mode, household_name: householdName.trim(), code: code.trim() })
+    const r = await completeRegistration({
+      full_name: fullName.trim(),
+      member_type: memberType,
+      mode,
+      household_name: householdName.trim(),
+      code: code.trim(),
+      oyaji_member: oyajiMember,
+      tshirt_size: tshirtSize,
+    })
     setBusy(false)
     if (!r.ok) {
       setErr(r.message)
@@ -88,6 +104,25 @@ export default function RegisterProfile() {
               <option value="ob">OB家庭</option>
             </Select>
           </Field>
+          <div className="rounded-xl bg-gray-50 p-3">
+            <button type="button" onClick={() => setOyajiMember(!oyajiMember)} className="flex w-full items-center gap-3 text-left">
+              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${oyajiMember ? 'border-brand-red bg-brand-red text-white' : 'border-gray-300 bg-white'}`}>{oyajiMember ? '✓' : ''}</span>
+              <span className="font-bold">現在、おやじ倶楽部に加盟しています</span>
+            </button>
+            <p className="mt-2 text-sm leading-relaxed text-gray-600">
+              パパで、すでにおやじ倶楽部に加盟している方だけチェックしてください。加盟していなくても登録できます。
+            </p>
+            {oyajiMember && (
+              <div className="mt-3">
+                <Field label="Tシャツサイズ">
+                  <Select value={tshirtSize} onChange={(e) => setTshirtSize(e.target.value)}>
+                    <option value="">選択してください</option>
+                    {TSHIRT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </Select>
+                </Field>
+              </div>
+            )}
+          </div>
           <div className="flex gap-2">
             <button type="button" onClick={() => setMode('new')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${mode === 'new' ? 'bg-brand-red text-white' : 'border border-gray-300 bg-white text-gray-600'}`}>新しく世帯を登録</button>
             <button type="button" onClick={() => setMode('join')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-bold ${mode === 'join' ? 'bg-brand-red text-white' : 'border border-gray-300 bg-white text-gray-600'}`}>家族の世帯に参加</button>
