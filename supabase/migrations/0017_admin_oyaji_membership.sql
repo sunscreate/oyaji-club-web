@@ -17,3 +17,6 @@ begin
     tshirt_delivered = coalesce(p_joined, false)
   where id = p_target;
 end $$;
+
+-- PostgREST(Supabase API) に新しい関数をすぐ認識させる。
+notify pgrst, 'reload schema';

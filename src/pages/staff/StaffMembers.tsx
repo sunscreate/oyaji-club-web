@@ -58,7 +58,9 @@ export default function StaffMembers() {
     const { error } = await supabase.rpc('set_oyaji_membership', { p_target: row.id, p_joined: joined })
     setBusy(false)
     if (error) {
-      setErr(error.message.includes('forbidden') ? '加盟状態を変更する権限がありません。' : `加盟状態の変更に失敗しました: ${error.message}`)
+      setErr(error.message.includes('set_oyaji_membership') || error.message.includes('schema cache')
+        ? '加盟状態を変更するためのSupabase SQLがまだ反映されていません。SQL Editorで0017のSQLを実行してください。'
+        : error.message.includes('forbidden') ? '加盟状態を変更する権限がありません。' : `加盟状態の変更に失敗しました: ${error.message}`)
       return
     }
     setProfiles((cur) => cur.map((p) => p.id === row.id ? { ...p, oyaji_member: joined } : p))
