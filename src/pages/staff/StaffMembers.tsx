@@ -6,6 +6,7 @@ import { Card, EmptyState, Input, PageTitle, RoleBadges, Spinner } from '../../c
 import type { RoleType } from '../../types'
 
 interface P { id: string; full_name: string; household_id: string | null; member_type: string; oyaji_member: boolean }
+interface HouseholdGroup { key: string; name: string; members: P[] }
 
 export default function StaffMembers() {
   const { isOwner, isPresident, profile } = useAuth()
@@ -52,8 +53,14 @@ export default function StaffMembers() {
 
   if (loading) return <Spinner />
 
-  const joined = profiles.filter((p) => p.oyaji_member).length
-  const filtered = profiles.filter((p) => p.full_name.includes(q.trim()))
+  const allGroups = groupByHousehold(profiles, households)
+  const joinedHouseholds = allGroups.filter((g) => g.members.some((p) => p.oyaji_member)).length
+  const filtered = profiles.filter((p) => {
+    const keyword = q.trim()
+    if (!keyword) return true
+    return p.full_name.includes(keyword) || (households[p.household_id ?? ''] ?? '').includes(keyword)
+  })
+  const filteredGroups = groupByHousehold(filtered, households)
 
   return (
     <div className="space-y-4">
@@ -61,44 +68,63 @@ export default function StaffMembers() {
       <PageTitle>アカウント名簿</PageTitle>
       <Card>
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-xl bg-gray-50 py-2"><p className="text-2xl font-extrabold">{profiles.length}</p><p className="text-xs text-gray-500">全アカウント</p></div>
-          <div className="rounded-xl bg-gray-50 py-2"><p className="text-2xl font-extrabold text-brand-red">{joined}</p><p className="text-xs text-gray-500">加盟</p></div>
-          <div className="rounded-xl bg-gray-50 py-2"><p className="text-2xl font-extrabold text-gray-400">{profiles.length - joined}</p><p className="text-xs text-gray-500">未加盟</p></div>
+          <div className="rounded-xl bg-gray-50 py-2"><p className="text-2xl font-extrabold">{allGroups.length}</p><p className="text-xs text-gray-500">登録世帯</p></div>
+          <div className="rounded-xl bg-gray-50 py-2"><p className="text-2xl font-extrabold text-brand-red">{joinedHouseholds}</p><p className="text-xs text-gray-500">加盟世帯</p></div>
+          <div className="rounded-xl bg-gray-50 py-2"><p className="text-2xl font-extrabold text-gray-400">{allGroups.length - joinedHouseholds}</p><p className="text-xs text-gray-500">未加盟世帯</p></div>
         </div>
+        <p className="mt-3 text-xs text-gray-500">同じ世帯に複数人登録されていても、集計では1世帯として数えます。</p>
       </Card>
 
-      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="氏名で検索" />
+      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="氏名・世帯名で検索" />
       {err && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-brand-red">{err}</p>}
 
-      {filtered.length === 0 ? <EmptyState>該当なし</EmptyState> : (
+      {filteredGroups.length === 0 ? <EmptyState>該当なし</EmptyState> : (
         <div className="space-y-2">
-          {filtered.map((p) => {
-            const roles = roleMap[p.id] ?? []
+          {filteredGroups.map((group) => {
+            const joined = group.members.some((p) => p.oyaji_member)
             return (
-              <Card key={p.id}>
-                <div className="flex items-center gap-2">
+              <Card key={group.key}>
+                <div className="mb-3 flex items-center gap-2">
                   <div className="flex-1">
-                    <p className="font-bold">{p.full_name}
-                      {p.id === profile?.id && <span className="ml-1 text-xs text-gray-400">（あなた）</span>}
-                    </p>
-                    <p className="text-xs text-gray-500">{households[p.household_id ?? ''] ?? '世帯なし'} ・ {p.member_type === 'ob' ? 'OB' : '在園'}</p>
+                    <p className="font-extrabold">{group.name}</p>
+                    <p className="text-xs text-gray-500">{group.members.length}名登録</p>
                   </div>
-                  {p.oyaji_member
+                  {joined
                     ? <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-brand-red">🦁 加盟</span>
                     : <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-bold text-gray-500">未加盟</span>}
                 </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <RoleBadges roles={roles} />
-                  {canDelete && p.id !== profile?.id && !roles.includes('site_owner') && (
-                    confirmId === p.id ? (
-                      <span className="ml-auto flex items-center gap-2">
-                        <button onClick={() => del(p.id)} disabled={busy} className="rounded-lg bg-brand-red px-3 py-1.5 text-sm font-bold text-white">本当に削除</button>
-                        <button onClick={() => setConfirmId(null)} className="text-sm text-gray-500">やめる</button>
-                      </span>
-                    ) : (
-                      <button onClick={() => setConfirmId(p.id)} className="ml-auto text-sm text-gray-400">アカウント削除</button>
+                <div className="divide-y divide-gray-100">
+                  {group.members.map((p) => {
+                    const roles = roleMap[p.id] ?? []
+                    return (
+                      <div key={p.id} className="py-3 first:pt-0 last:pb-0">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <p className="font-bold">{p.full_name}
+                              {p.id === profile?.id && <span className="ml-1 text-xs text-gray-400">（あなた）</span>}
+                            </p>
+                            <p className="text-xs text-gray-500">{p.member_type === 'ob' ? 'OB' : '在園'}</p>
+                          </div>
+                          {p.oyaji_member
+                            ? <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-brand-red">加盟</span>
+                            : <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-bold text-gray-500">未加盟</span>}
+                        </div>
+                        <div className="mt-2 flex items-center gap-2">
+                          <RoleBadges roles={roles} />
+                          {canDelete && p.id !== profile?.id && !roles.includes('site_owner') && (
+                            confirmId === p.id ? (
+                              <span className="ml-auto flex items-center gap-2">
+                                <button onClick={() => del(p.id)} disabled={busy} className="rounded-lg bg-brand-red px-3 py-1.5 text-sm font-bold text-white">本当に削除</button>
+                                <button onClick={() => setConfirmId(null)} className="text-sm text-gray-500">やめる</button>
+                              </span>
+                            ) : (
+                              <button onClick={() => setConfirmId(p.id)} className="ml-auto text-sm text-gray-400">アカウント削除</button>
+                            )
+                          )}
+                        </div>
+                      </div>
                     )
-                  )}
+                  })}
                 </div>
               </Card>
             )
@@ -108,4 +134,15 @@ export default function StaffMembers() {
       {!canDelete && <p className="text-xs text-gray-400">※ アカウント削除は会長・オーナーのみ可能です。</p>}
     </div>
   )
+}
+
+function groupByHousehold(rows: P[], households: Record<string, string>): HouseholdGroup[] {
+  const groups = new Map<string, HouseholdGroup>()
+  rows.forEach((p) => {
+    const key = p.household_id ? `household:${p.household_id}` : `profile:${p.id}`
+    const name = p.household_id ? (households[p.household_id] ?? '世帯名未設定') : '世帯なし'
+    if (!groups.has(key)) groups.set(key, { key, name, members: [] })
+    groups.get(key)!.members.push(p)
+  })
+  return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, 'ja'))
 }
