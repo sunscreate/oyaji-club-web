@@ -37,7 +37,7 @@ export default function StaffDashboard() {
     const { count: fbUnread } = await supabase.from('feedback').select('id', { count: 'exact', head: true }).eq('status', 'unread')
     setUnread(fbUnread ?? 0)
     const since = new Date(Date.now() - 7 * 86400000).toISOString()
-    const { count: nm } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('oyaji_member', true).gte('oyaji_joined_at', since)
+    const { count: nm } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('oyaji_member', true).eq('tshirt_delivered', false).gte('oyaji_joined_at', since)
     setNewMembers(nm ?? 0)
     const { data: fd } = await supabase.rpc('get_club_funds')
     if (fd) { setFunds(fd as never); setBaseInput(String((fd as { base: number }).base)) }
