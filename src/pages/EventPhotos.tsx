@@ -12,7 +12,7 @@ import { formatDateJP } from '../lib/format'
 
 export default function EventPhotos() {
   const { id } = useParams<{ id: string }>()
-  const { profile, isStaff } = useAuth()
+  const { profile, isStaff, isOwner, isPresident } = useAuth()
   const [title, setTitle] = useState('')
   const [dateStr, setDateStr] = useState('')
   const [photos, setPhotos] = useState<Photo[]>([])
@@ -24,6 +24,8 @@ export default function EventPhotos() {
   const [lightbox, setLightbox] = useState<number | null>(null)
   const [selectMode, setSelectMode] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
@@ -78,6 +80,7 @@ export default function EventPhotos() {
     const n = new Set(selected)
     n.has(pid) ? n.delete(pid) : n.add(pid)
     setSelected(n)
+    setConfirmDelete(false)
   }
 
   async function downloadSelected() {
@@ -101,8 +104,35 @@ export default function EventPhotos() {
     setSelected(new Set())
   }
 
+  async function deleteSelected() {
+    const chosen = photos.filter((p) => selected.has(p.id))
+    if (chosen.length === 0 || !(isOwner || isPresident)) return
+    if (!confirmDelete) {
+      setConfirmDelete(true)
+      return
+    }
+    setDeleting(true)
+    setErr('')
+    let failed = 0
+    for (const p of chosen) {
+      try {
+        await deletePhoto(p)
+      } catch (er) {
+        failed++
+        console.error('delete failed', er)
+      }
+    }
+    setDeleting(false)
+    setConfirmDelete(false)
+    setSelected(new Set())
+    setSelectMode(false)
+    if (failed > 0) setErr(`${failed}枚の削除に失敗しました。時間をおいて再度お試しください。`)
+    await load()
+  }
+
   if (loading) return <Spinner />
 
+  const canBulkDelete = isOwner || isPresident
   const slides = photos.map((p) => ({ url: fulls[p.storage_path] ?? '', caption: p.taken_at ? formatDateJP(p.taken_at.slice(0, 10)) : '', canDelete: canDelete(p) }))
 
   return (
@@ -111,7 +141,7 @@ export default function EventPhotos() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-extrabold">{title} の写真</h1>
         {photos.length > 0 && (
-          <button onClick={() => { setSelectMode(!selectMode); setSelected(new Set()) }} className="text-sm font-bold text-brand-red">
+          <button onClick={() => { setSelectMode(!selectMode); setSelected(new Set()); setConfirmDelete(false) }} className="text-sm font-bold text-brand-red">
             {selectMode ? 'キャンセル' : '選択'}
           </button>
         )}
@@ -126,9 +156,18 @@ export default function EventPhotos() {
       {err && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-brand-red">{err}</p>}
 
       {selectMode && (
-        <div className="sticky top-14 z-10 flex items-center gap-2 rounded-xl bg-white p-2 shadow">
+        <div className="sticky top-14 z-10 flex flex-wrap items-center gap-2 rounded-xl bg-white p-2 shadow">
           <span className="ml-2 text-sm font-bold">{selected.size}枚 選択中</span>
-          <button onClick={downloadSelected} disabled={selected.size === 0} className="ml-auto rounded-lg bg-brand-yellow px-4 py-2 text-sm font-bold disabled:opacity-40">ダウンロード</button>
+          <button onClick={downloadSelected} disabled={selected.size === 0 || deleting} className="ml-auto rounded-lg bg-brand-yellow px-4 py-2 text-sm font-bold disabled:opacity-40">ダウンロード</button>
+          {canBulkDelete && (
+            <button
+              onClick={deleteSelected}
+              disabled={selected.size === 0 || deleting}
+              className={`rounded-lg px-4 py-2 text-sm font-bold text-white disabled:opacity-40 ${confirmDelete ? 'bg-red-700' : 'bg-brand-red'}`}
+            >
+              {deleting ? '削除中…' : confirmDelete ? '本当に削除' : '選択削除'}
+            </button>
+          )}
         </div>
       )}
 
@@ -157,7 +196,7 @@ export default function EventPhotos() {
       )}
 
       <Card>
-        <p className="text-xs text-gray-500">写真は会員のみ閲覧できます（一般公開・検索エンジンには表示されません）。削除できるのは「自分が投稿した写真」またはお世話係・会長・オーナーです。</p>
+        <p className="text-xs text-gray-500">写真は会員のみ閲覧できます（一般公開・検索エンジンには表示されません）。削除できるのは「自分が投稿した写真」またはお世話係・会長・オーナーです。選択削除は会長・オーナーのみ使えます。</p>
       </Card>
 
       {lightbox !== null && (
