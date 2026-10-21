@@ -74,10 +74,8 @@ export default function StaffPrep() {
 
         <div className="mt-4">
           <label className="mb-1 block text-sm font-bold text-gray-700">予算を設定（円）</label>
-          <div className="flex gap-2">
-            <Input type="number" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="60000" className="flex-1" />
-            <Button variant="ghost" className="w-auto shrink-0 px-5" onClick={saveBudget}>保存</Button>
-          </div>
+          <Input type="number" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="60000" />
+          <Button variant="ghost" className="mt-2" onClick={saveBudget}>保存</Button>
         </div>
 
         <div className="mt-4">
