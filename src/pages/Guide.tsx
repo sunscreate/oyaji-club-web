@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Button, Card } from '../components/ui'
 import logo from '../assets/logo.jpg'
+import InstallButton from '../components/InstallButton'
 
 type ScreenKind = 'signup' | 'form' | 'mypage' | 'event' | 'photos' | 'feedback'
 
@@ -65,6 +66,7 @@ export default function Guide() {
             <Link to="/signup"><Button variant="secondary" className="py-3 text-base">新規登録へ</Button></Link>
           </div>
         )}
+        <InstallButton />
         <Button type="button" variant="ghost" className="py-3 text-base" onClick={() => window.print()}>印刷する</Button>
       </div>
 

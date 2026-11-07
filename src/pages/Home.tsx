@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { formatDateJP, formatTimeRange } from '../lib/format'
 import { Button, Card, Spinner } from '../components/ui'
+import InstallButton from '../components/InstallButton'
 import type { EventRow } from '../types'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
@@ -100,6 +101,7 @@ export default function Home() {
 
   return (
     <div className="space-y-4">
+      <InstallButton />
       {(feedbackNotice.unreadThreads > 0 || feedbackNotice.newFaqs > 0) && (
         <section className="space-y-2">
           {feedbackNotice.unreadThreads > 0 && (
