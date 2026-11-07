@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { NavLink, Link, useNavigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { syncAnnouncementBadge } from '../lib/badge'
 import logo from '../assets/logo.jpg'
 
 function Header() {
@@ -73,6 +74,10 @@ function BottomNav() {
 }
 
 export function AppLayout() {
+  const { profile } = useAuth()
+  useEffect(() => {
+    if (profile?.id) syncAnnouncementBadge(profile.id)
+  }, [profile?.id])
   return (
     <div className="min-h-full">
       <Header />

@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { markAnnouncementsSeen } from '../lib/badge'
 import { Card, EmptyState, PageTitle, Spinner } from '../components/ui'
 
 interface Ann { id: string; title: string; content: string; created_at: string }
 
 export default function News() {
+  const { profile } = useAuth()
   const [rows, setRows] = useState<Ann[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -13,8 +16,9 @@ export default function News() {
       const { data } = await supabase.from('announcements').select('*').order('created_at', { ascending: false })
       setRows((data ?? []) as Ann[])
       setLoading(false)
+      if (profile?.id) await markAnnouncementsSeen(profile.id)
     })()
-  }, [])
+  }, [profile?.id])
 
   if (loading) return <Spinner />
 
