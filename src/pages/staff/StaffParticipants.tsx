@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { formatDateJP } from '../../lib/format'
 import { Card, EmptyState, Spinner } from '../../components/ui'
 import type { Allergy } from '../../types'
+import { loadRoster, type RosterEntry } from '../../lib/roster'
 
 interface PMember { participation_id: string; member_kind: string; label: string | null }
 interface Part { id: string; household_id: string; join_type: string; planned_time: string | null; note: string | null }
@@ -16,13 +17,20 @@ export default function StaffParticipants() {
   const [members, setMembers] = useState<PMember[]>([])
   const [households, setHouseholds] = useState<Record<string, string>>({})
   const [allergies, setAllergies] = useState<Allergy[]>([])
+  const [entries, setEntries] = useState<RosterEntry[]>([])
+  const [ended, setEnded] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     ;(async () => {
       if (!id) return
-      const { data: ev } = await supabase.from('events').select('title,event_date').eq('id', id).maybeSingle()
-      if (ev) { setTitle((ev as { title: string }).title); setDateStr((ev as { event_date: string }).event_date) }
+      const { data: ev } = await supabase.from('events').select('title,event_date,end_time').eq('id', id).maybeSingle()
+      if (ev) {
+        const e = ev as { title: string; event_date: string; end_time: string | null }
+        setTitle(e.title); setDateStr(e.event_date); setEnded(eventEnded(e.event_date, e.end_time))
+      }
+      const roster = await loadRoster(id)
+      setEntries(roster.entries)
       const { data: ps } = await supabase.from('participations').select('*').eq('event_id', id)
       const partList = (ps ?? []) as Part[]
       setParts(partList)
@@ -59,6 +67,8 @@ export default function StaffParticipants() {
         <h1 className="text-xl font-extrabold">{title} 参加状況</h1>
       </div>
 
+      {ended && <FinalResult entries={entries} />}
+
       <Card>
         <div className="grid grid-cols-3 gap-2 text-center">
           <Stat label="世帯" value={attendingParts.length} />
@@ -69,7 +79,7 @@ export default function StaffParticipants() {
       </Card>
 
       <section>
-        <h2 className="mb-2 text-sm font-bold text-gray-500">参加世帯</h2>
+        <h2 className="mb-2 text-sm font-bold text-gray-500">{ended ? '事前の参加登録' : '参加世帯'}</h2>
         {attendingParts.length === 0 ? (
           <EmptyState>まだ参加登録はありません。</EmptyState>
         ) : (
@@ -126,6 +136,53 @@ export default function StaffParticipants() {
         )}
       </section>
     </div>
+  )
+}
+
+function eventEnded(dateStr: string, endTime: string | null) {
+  if (!dateStr) return false
+  const end = endTime ? `${dateStr}T${endTime}` : `${dateStr}T23:59:59`
+  const t = new Date(end).getTime()
+  return !Number.isNaN(t) && t < Date.now()
+}
+
+function FinalResult({ entries }: { entries: RosterEntry[] }) {
+  const received = entries.filter((e) => e.record?.received)
+  const count = received.length
+  const adults = received.reduce((s, e) => s + e.adults, 0)
+  const kids = received.reduce((s, e) => s + e.children, 0)
+  const paid = received.filter((e) => e.record?.paid).length
+  return (
+    <section>
+      <div className="rounded-2xl border-2 border-green-600 bg-green-50 p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="rounded-full bg-green-600 px-3 py-1 text-xs font-extrabold text-white">最終結果</span>
+          <h2 className="text-base font-extrabold text-green-800">当日受付での実際の参加</h2>
+        </div>
+        {count === 0 ? (
+          <p className="text-sm text-gray-600">当日受付でチェックされた参加者はまだいません。</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <Stat label="参加世帯" value={count} />
+              <Stat label="大人" value={adults} />
+              <Stat label="子ども" value={kids} />
+            </div>
+            <p className="mt-2 text-center text-sm font-bold text-green-800">合計 {adults + kids} 人（集金済 {paid} / {count}）</p>
+            <ul className="mt-3 space-y-1">
+              {received.map((e) => (
+                <li key={`${e.kind}-${e.refId}`} className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm">
+                  <span className="text-green-600">✅</span>
+                  <span className="font-bold">{e.name}</span>
+                  <span className="ml-auto text-gray-500">大人{e.adults}・子{e.children}</span>
+                  {e.record?.paid && <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">集金済</span>}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    </section>
   )
 }
 
