@@ -20,11 +20,12 @@ function uuid(): string {
 /** 1枚を圧縮してアップロードし photos 行を作成 */
 export async function uploadPhoto(eventId: string, file: File, userId: string): Promise<void> {
   const { full, thumb, takenAt } = await processImage(file, {
-    fullMaxWidthOrHeight: 3200,
-    fullMaxSizeMB: 2.5,
-    fullQuality: 0.92,
+    // ほぼ無劣化（高解像度・高品質WebP）。無料運用を維持しつつ元画像の綺麗さを保つ
+    fullMaxWidthOrHeight: 4096,
+    fullMaxSizeMB: 6,
+    fullQuality: 0.95,
     thumbMaxWidthOrHeight: 600,
-    thumbQuality: 0.78,
+    thumbQuality: 0.8,
   })
   const key = uuid()
   const fullPath = `${eventId}/full/${key}.webp`

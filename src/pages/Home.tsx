@@ -161,6 +161,9 @@ export default function Home() {
                 <Button variant="secondary">📝 アンケートに答える</Button>
               </Link>
             )}
+            <Link to={`/events/${next.id}/photos`} className="mt-3 block">
+              <Button variant="ghost">📷 写真を追加する</Button>
+            </Link>
           </Card>
         ) : (
           <Card><p className="text-gray-500">予定されているイベントはまだありません。</p></Card>
