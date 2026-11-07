@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useClasses, classLabel } from '../hooks/useClasses'
 import { formatDateJP, formatTimeRange } from '../lib/format'
 import { feeLabel, type FeeConfig } from '../lib/fee'
-import { Button, Card, ErrorText, Field, Input, Spinner, Textarea } from '../components/ui'
+import { Button, Card, ErrorText, Field, Input, Select, Spinner, Textarea } from '../components/ui'
 import type { Child, ClassRow, EventRow, Profile } from '../types'
 
 interface PMember { id: string; participation_id: string; member_kind: string; profile_id: string | null; child_id: string | null; label: string | null }
@@ -214,6 +214,10 @@ function ParticipationForm({
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [ready, setReady] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newClass, setNewClass] = useState('')
+  const [savingChild, setSavingChild] = useState(false)
   const isDeclined = myPart?.join_type === 'absent'
 
   useEffect(() => {
@@ -254,6 +258,26 @@ function ParticipationForm({
   }
 
   const classOf = (cid: string | null) => classes.find((c) => c.id === cid)
+
+  async function reloadChildren() {
+    const { data: ch } = await supabase.from('children').select('*').eq('household_id', profile!.household_id!)
+    setChildren((ch ?? []) as Child[])
+  }
+
+  async function addChild() {
+    const name = newName.trim()
+    if (!name) return
+    setSavingChild(true); setErr('')
+    const { data, error } = await supabase.from('children')
+      .insert({ household_id: profile!.household_id, full_name: name, class_id: newClass || null, status: 'current' })
+      .select('id').single()
+    setSavingChild(false)
+    if (error) { setErr('子どもの登録に失敗しました。時間をおいて再度お試しください。'); return }
+    const newId = (data as { id: string }).id
+    await reloadChildren()
+    setCheckedChildren((cur) => { const n = new Set(cur); n.add(newId); return n })
+    setAddOpen(false); setNewName(''); setNewClass('')
+  }
 
   function toggle(set: Set<string>, key: string, setter: (s: Set<string>) => void) {
     const n = new Set(set)
@@ -342,7 +366,23 @@ function ParticipationForm({
               <CheckRow key={c.id} checked={checkedChildren.has(c.id)} onChange={() => toggle(checkedChildren, c.id, setCheckedChildren)} label={c.full_name} sub={classLabel(classOf(c.class_id)) || '子ども'} />
             ))}
             {adults.length + children.length === 0 && (
-              <p className="text-sm text-gray-500">家族が未登録です。<Link to="/mypage/children" className="text-brand-red underline">子どもを登録</Link>してください。</p>
+              <p className="text-sm text-gray-500">まだ家族が登録されていません。下のボタンから子どもを追加できます。</p>
+            )}
+            {addOpen ? (
+              <div className="space-y-2 rounded-xl border-2 border-brand-red bg-red-50 p-3">
+                <p className="text-sm font-bold text-gray-700">子どもを追加</p>
+                <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="子どもの名前" />
+                <Select value={newClass} onChange={(e) => setNewClass(e.target.value)}>
+                  <option value="">クラス未設定（後でマイページで設定できます）</option>
+                  {classes.map((c) => <option key={c.id} value={c.id}>{classLabel(c)}</option>)}
+                </Select>
+                <div className="flex gap-2">
+                  <Button type="button" onClick={addChild} disabled={savingChild || !newName.trim()}>{savingChild ? '…' : '追加する'}</Button>
+                  <Button type="button" variant="ghost" onClick={() => { setAddOpen(false); setNewName(''); setNewClass('') }}>キャンセル</Button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setAddOpen(true)} className="w-full rounded-xl border-2 border-dashed border-gray-300 px-4 py-3 text-sm font-bold text-gray-600 active:scale-[0.99]">＋ 子どもを追加</button>
             )}
           </div>
         </div>
