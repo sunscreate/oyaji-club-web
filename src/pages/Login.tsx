@@ -52,6 +52,10 @@ export default function Login() {
           <ErrorText>{err}</ErrorText>
           <Button type="submit" disabled={busy}>{busy ? '…' : 'ログイン'}</Button>
         </form>
+        <p className="mt-4 text-center text-sm text-gray-600">
+          パスワードをお忘れの方は{' '}
+          <Link to="/reset" className="font-bold text-brand-red underline">こちら</Link>
+        </p>
       </Card>
       <p className="mt-6 text-center text-gray-600">
         はじめての方は{' '}
