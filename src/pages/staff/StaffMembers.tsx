@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { Card, EmptyState, Input, PageTitle, RoleBadges, Spinner } from '../../components/ui'
-import type { RoleType } from '../../types'
+import { useClasses, classLabel } from '../../hooks/useClasses'
+import type { RoleType, Child } from '../../types'
 
 interface P { id: string; full_name: string; household_id: string | null; member_type: string; oyaji_member: boolean }
 interface HouseholdGroup { key: string; name: string; members: P[] }
@@ -15,6 +16,8 @@ export default function StaffMembers() {
   const [profiles, setProfiles] = useState<P[]>([])
   const [households, setHouseholds] = useState<Record<string, string>>({})
   const [roleMap, setRoleMap] = useState<Record<string, RoleType[]>>({})
+  const [childByHh, setChildByHh] = useState<Record<string, Child[]>>({})
+  const { classes } = useClasses()
   const [q, setQ] = useState('')
   const [loading, setLoading] = useState(true)
   const [confirmId, setConfirmId] = useState<string | null>(null)
@@ -22,10 +25,11 @@ export default function StaffMembers() {
   const [err, setErr] = useState('')
 
   const load = useCallback(async () => {
-    const [{ data: ps }, { data: hh }, { data: rs }] = await Promise.all([
+    const [{ data: ps }, { data: hh }, { data: rs }, { data: ch }] = await Promise.all([
       supabase.from('profiles').select('id,full_name,household_id,member_type,oyaji_member').order('full_name'),
       supabase.from('households').select('id,name'),
       supabase.from('roles').select('profile_id,role').is('end_date', null),
+      supabase.from('children').select('id,household_id,full_name,class_id,status,grad_year').order('full_name'),
     ])
     setProfiles((ps ?? []) as P[])
     const hmap: Record<string, string> = {}
@@ -34,6 +38,9 @@ export default function StaffMembers() {
     const rmap: Record<string, RoleType[]> = {}
     ;((rs ?? []) as { profile_id: string; role: RoleType }[]).forEach((r) => { (rmap[r.profile_id] ??= []).push(r.role) })
     setRoleMap(rmap)
+    const cmap: Record<string, Child[]> = {}
+    ;((ch ?? []) as Child[]).forEach((c) => { (cmap[c.household_id] ??= []).push(c) })
+    setChildByHh(cmap)
     setLoading(false)
   }, [])
 
@@ -151,6 +158,25 @@ export default function StaffMembers() {
                     )
                   })}
                 </div>
+                {(() => {
+                  const hid = group.members[0]?.household_id
+                  const kids = hid ? (childByHh[hid] ?? []) : []
+                  if (kids.length === 0) return null
+                  return (
+                    <div className="mt-3 border-t border-gray-100 pt-3">
+                      <p className="mb-1 text-xs font-bold text-gray-500">子ども（{kids.length}名）</p>
+                      <ul className="space-y-1">
+                        {kids.map((c) => (
+                          <li key={c.id} className="flex items-center gap-2 text-sm">
+                            <span>🧒</span>
+                            <span className="font-bold">{c.full_name}</span>
+                            <span className="ml-auto text-gray-500">{childLabel(c, classes)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                })()}
               </Card>
             )
           })}
@@ -159,6 +185,11 @@ export default function StaffMembers() {
       {!canDelete && <p className="text-xs text-gray-400">※ アカウント削除は会長・オーナーのみ可能です。</p>}
     </div>
   )
+}
+
+function childLabel(c: Child, classes: ReturnType<typeof useClasses>['classes']) {
+  if (c.status === 'ob') return `OB${c.grad_year ? `（${c.grad_year}年度卒）` : ''}`
+  return classLabel(classes.find((x) => x.id === c.class_id)) || 'クラス未設定'
 }
 
 function groupByHousehold(rows: P[], households: Record<string, string>): HouseholdGroup[] {
