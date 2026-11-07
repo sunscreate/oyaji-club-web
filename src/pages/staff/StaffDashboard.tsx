@@ -118,6 +118,7 @@ export default function StaffDashboard() {
         {next ? <Tile to={`/staff/events/${next.id}/prep`} icon="🛒" label="準備・買い物" /> : <Tile to="/staff/events" icon="🛒" label="準備・買い物" sub="イベントを選択" />}
         <Tile to="/staff/oyaji" icon="🦁" label="加盟者名簿" />
         <Tile to="/staff/members" icon="📇" label="アカウント名簿" />
+        <Tile to="/staff/surveys" icon="📊" label="アンケート結果" />
         <Tile to="/staff/feedback" icon="✉️" label={`ご意見・ご質問${unread > 0 ? `（未確認${unread}）` : ''}`} />
         <Tile to="/staff/announcements" icon="📢" label="お知らせ管理" />
         <Tile to="/staff/classes" icon="🏷" label="クラス管理" />

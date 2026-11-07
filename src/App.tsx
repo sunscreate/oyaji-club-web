@@ -34,6 +34,7 @@ import StaffReception from './pages/staff/StaffReception'
 import StaffAccounting from './pages/staff/StaffAccounting'
 import StaffSurveyEditor from './pages/staff/StaffSurveyEditor'
 import StaffSurveyResults from './pages/staff/StaffSurveyResults'
+import StaffSurveyIndex from './pages/staff/StaffSurveyIndex'
 import StaffFeedback from './pages/staff/StaffFeedback'
 import StaffRoles from './pages/staff/StaffRoles'
 import StaffEventResults from './pages/staff/StaffEventResults'
@@ -76,6 +77,7 @@ export default function App() {
       <Route element={<RequireStaff><AppLayout /></RequireStaff>}>
         <Route path="/staff" element={<StaffDashboard />} />
         <Route path="/staff/events" element={<StaffHome />} />
+        <Route path="/staff/surveys" element={<StaffSurveyIndex />} />
         <Route path="/staff/events/new" element={<StaffEventForm />} />
         <Route path="/staff/events/:id" element={<StaffEventHub />} />
         <Route path="/staff/events/:id/edit" element={<StaffEventForm />} />
