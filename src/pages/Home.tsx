@@ -156,6 +156,11 @@ export default function Home() {
               <Link to={`/events/${next.id}`}><Button variant="ghost">詳しく見る</Button></Link>
               <Link to={`/events/${next.id}#join`}><Button variant="primary">参加する</Button></Link>
             </div>
+            {next.survey_enabled && (
+              <Link to={`/events/${next.id}/survey`} className="mt-3 block">
+                <Button variant="secondary">📝 アンケートに答える</Button>
+              </Link>
+            )}
           </Card>
         ) : (
           <Card><p className="text-gray-500">予定されているイベントはまだありません。</p></Card>
